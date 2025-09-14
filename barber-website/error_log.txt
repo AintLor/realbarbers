@@ -1,0 +1,5 @@
+[23-Jan-2025 04:34:16 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'your_username'@'localhost' (using password: YES) in C:\xampp\htdocs\PROG Management\barber-website\process_booking.php:15
+Stack trace:
+#0 C:\xampp\htdocs\PROG Management\barber-website\process_booking.php(15): mysqli->__construct('localhost', 'your_username', Object(SensitiveParameterValue), 'your_database')
+#1 {main}
+  thrown in C:\xampp\htdocs\PROG Management\barber-website\process_booking.php on line 15
