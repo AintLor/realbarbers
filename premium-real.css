@@ -900,7 +900,7 @@ label {
     justify-content: center;
     align-items: center;
     gap: 1rem;
-    margin: 1rem 0 1rem;
+    margin: 1.6rem 0 0.4rem;
     font-size: 2rem;
 }
 
@@ -944,8 +944,8 @@ label {
 
 #closeReview,
 .btn-ghost {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
     color: var(--text-secondary);
     padding: 0.85rem 1rem;
     text-transform: uppercase;
