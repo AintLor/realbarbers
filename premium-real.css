@@ -1352,6 +1352,11 @@ body.no-scroll {
     .star-rating {
         gap: 0.75rem;
     }
+
+    /* Hide form helper hints on small screens to reduce clutter */
+    .reservation-card .hint {
+        display: none;
+    }
 }
 
 @media (max-width: 540px) {
@@ -1362,7 +1367,7 @@ body.no-scroll {
     }
 
     .big-heading {
-        font-size: 2.6rem;
+        font-size: 2.3rem;
     }
 
     .service-name {
