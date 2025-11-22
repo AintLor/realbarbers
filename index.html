@@ -161,19 +161,18 @@
 			<button id="leaveReviewBtn" class="btn-glow">Leave a Review</button>
 
 			<!-- Popup (Hidden by default) -->
-			<div id="reviewPopup" class="popup"
-				style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center;">
-				<div class="popup-content"
-					style="background:#111; padding:2rem; border:1px solid #333; max-width:500px; width:90%;">
+			<div id="reviewPopup" class="review-popup">
+				<div class="popup-content">
 					<h2 class="mb-4">Rate Experience</h2>
 					<form id="reviewForm" method="POST">
 						<div class="form-group">
 							<input type="text" id="name" name="name" class="form-control" placeholder="Your Name"
 								required>
+							<small id="nameError" class="form-error" aria-live="polite"></small>
 						</div>
 						<div class="form-group">
-							<label>Rating</label>
-							<div class="star-rating" style="font-size:2rem; color:gold;">
+							<label for="rating">Rating</label>
+							<div class="star-rating" aria-label="Choose a rating">
 								<span class="star" data-rating="1">&#9733;</span>
 								<span class="star" data-rating="2">&#9733;</span>
 								<span class="star" data-rating="3">&#9733;</span>
@@ -181,14 +180,15 @@
 								<span class="star" data-rating="5">&#9733;</span>
 							</div>
 							<input type="hidden" id="rating" name="rating" required>
+							<small id="ratingError" class="form-error" aria-live="polite"></small>
 						</div>
 						<div class="form-group">
 							<textarea id="comment" name="comment" class="form-control"
 								placeholder="Comments (Optional)"></textarea>
 						</div>
+						<div id="reviewStatus" class="review-status" aria-live="polite"></div>
 						<button type="submit" class="btn-glow" style="width:100%">Submit</button>
-						<button type="button" id="closeReview"
-							style="background:none; border:none; color:#666; margin-top:1rem; width:100%">Close</button>
+						<button type="button" id="closeReview" class="btn-ghost" style="width:100%">Close</button>
 					</form>
 				</div>
 			</div>
