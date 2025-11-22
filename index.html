@@ -114,19 +114,44 @@
 
 	<!-- Gallery Section -->
 	<section id="gallery" class="gallery-section section-padding">
-		<div class="container-fluid">
-			<span class="section-label">03 / Gallery</span>
-			<h2 class="big-heading mb-5">Inside the Shop</h2>
-			<div id="lightgallery" class="gallery-grid">
-				<a href="gallery/g1.jpg" class="gallery-item"><img src="gallery/g1.jpg" alt="Barbershop interior 1"></a>
-				<a href="gallery/g2.jpg" class="gallery-item"><img src="gallery/g2.jpg" alt="Barbershop interior 2"></a>
-				<a href="gallery/g3.jpg" class="gallery-item"><img src="gallery/g3.jpg" alt="Barber working with client"></a>
-				<a href="gallery/g4.jpg" class="gallery-item"><img src="gallery/g4.jpg" alt="Haircut tools setup"></a>
-				<a href="gallery/g5.jpg" class="gallery-item"><img src="gallery/g5.jpg" alt="Barber chair detail"></a>
-				<a href="gallery/g6.jpg" class="gallery-item"><img src="gallery/g6.jpg" alt="Shop ambience lighting"></a>
-			</div>
-		</div>
-	</section>
+    <div class="container-fluid">
+        <span class="section-label">03 / Gallery</span>
+        <h2 class="big-heading mb-5">Inside the Shop</h2>
+        
+        <div id="lightgallery" class="owl-carousel owl-theme gallery-carousel">
+            <div class="item">
+                <a href="gallery/g1.jpg" class="gallery-item">
+                    <img src="gallery/g1.jpg" alt="Barbershop interior 1">
+                </a>
+            </div>
+            <div class="item">
+                <a href="gallery/g2.jpg" class="gallery-item">
+                    <img src="gallery/g2.jpg" alt="Barbershop interior 2">
+                </a>
+            </div>
+            <div class="item">
+                <a href="gallery/g3.jpg" class="gallery-item">
+                    <img src="gallery/g3.jpg" alt="Barber working with client">
+                </a>
+            </div>
+            <div class="item">
+                <a href="gallery/g4.jpg" class="gallery-item">
+                    <img src="gallery/g4.jpg" alt="Haircut tools setup">
+                </a>
+            </div>
+            <div class="item">
+                <a href="gallery/g5.jpg" class="gallery-item">
+                    <img src="gallery/g5.jpg" alt="Barber chair detail">
+                </a>
+            </div>
+            <div class="item">
+                <a href="gallery/g6.jpg" class="gallery-item">
+                    <img src="gallery/g6.jpg" alt="Shop ambience lighting">
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 
 	<!-- Team Section (Grid) -->
 	<section id="team" class="team-section">
@@ -374,6 +399,46 @@
 					selector: 'a',
 					download: false,
 					thumbnail: false
+				});
+			}
+		});
+		document.addEventListener('DOMContentLoaded', () => {
+			// 1. Initialize Owl Carousel
+			var owl = $('.owl-carousel');
+			owl.owlCarousel({
+				loop: true,
+				margin: 10,
+				nav: false, // Clean look (no arrows)
+				dots: true,
+				autoplay: true,
+				autoplayTimeout: 4000,
+				smartSpeed: 800, // Smooth easing
+				responsive: {
+					0: {
+						items: 1
+					},
+					600: {
+						items: 2
+					},
+					1000: {
+						items: 3
+					},
+					1400: {
+						items: 4
+					}
+				}
+			});
+
+			// 2. Re-Initialize LightGallery
+			// Note: We target the active items to prevent duplicates in lightbox caused by carousel looping
+			const galleryEl = document.getElementById('lightgallery');
+			if (galleryEl && window.lightGallery) {
+				lightGallery(galleryEl, {
+					selector: '.owl-item:not(.cloned) a', // Only open real items, not clones
+					download: false,
+					thumbnail: false,
+					animateThumb: false,
+					showThumbByDefault: false
 				});
 			}
 		});
