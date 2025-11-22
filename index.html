@@ -39,8 +39,14 @@
 			<a class="nav-link" href="#gallery">Gallery</a>
 			<a class="nav-link" href="#reviews">Reviews</a>
 			<a class="nav-link" href="#contact">Contact</a>
+			<a class="nav-link" href="#booking">Book</a>
 		</div>
-		<a href="#booking" class="btn-glow">Book Now</a>
+		<a href="#booking" class="btn-glow nav-cta-desktop">Book Now</a>
+		<button class="nav-toggle" aria-expanded="false" aria-label="Toggle menu">
+			<span></span>
+			<span></span>
+			<span></span>
+		</button>
 	</nav>
 
 	<!-- Hero Section -->
@@ -325,6 +331,9 @@
 		// Cursor
 		const cursorDot = document.querySelector('.cursor-dot');
 		const cursorOutline = document.querySelector('.cursor-outline');
+		const navBar = document.querySelector('.navbar');
+		const navToggle = document.querySelector('.nav-toggle');
+		const navLinks = document.querySelectorAll('.nav-links a');
 
 		window.addEventListener('mousemove', (e) => {
 			const posX = e.clientX;
@@ -347,13 +356,32 @@
 			document.querySelector('.hero-bg').style.transform = `scale(1.1) translate(${x}px, ${y}px)`;
 		});
 
+		// Mobile nav toggle
+		const closeNav = () => {
+			navBar?.classList.remove('open');
+			if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
+		};
+
+		navToggle?.addEventListener('click', () => {
+			const isOpen = navBar?.classList.toggle('open');
+			if (navToggle) navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		});
+
+		navLinks.forEach(link => link.addEventListener('click', closeNav));
+
+		window.addEventListener('resize', () => {
+			if (window.innerWidth > 1024) {
+				closeNav();
+			}
+		});
+
 		// Navbar Scroll
 		window.addEventListener('scroll', () => {
-			const nav = document.querySelector('.navbar');
+			if (!navBar) return;
 			if (window.scrollY > 50) {
-				nav.classList.add('scrolled');
+				navBar.classList.add('scrolled');
 			} else {
-				nav.classList.remove('scrolled');
+				navBar.classList.remove('scrolled');
 			}
 		});
 
