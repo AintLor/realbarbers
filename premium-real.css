@@ -868,7 +868,7 @@ label {
 }
 
 .review-popup .form-group:last-of-type {
-    margin-bottom: 1.1rem;
+    margin-bottom: 1.75rem;
 }
 
 .review-popup .form-control {
@@ -932,6 +932,8 @@ label {
 }
 
 .review-status {
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
     min-height: 1.2rem;
     text-align: center;
     font-size: 0.95rem;
