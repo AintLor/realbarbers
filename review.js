@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let reviews = [];
     let isFullReviewsVisible = false;
+    const recentReviewsContainer = document.getElementById('recent-reviews');
 
     function setStatus(message, type = '') {
         if (!reviewStatus) return;
@@ -185,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 reviews = data.reviews || [];
                 updateRatingBars(data.stats || {});
                 displayReviews(reviews);
+                renderRecentReviews();
             })
             .catch(error => {
                 console.error('Error loading reviews:', error);
@@ -212,6 +214,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${review.comment ? `<p class="review-comment">${review.comment}</p>` : ''}
             `;
             reviewsList.appendChild(reviewElement);
+        });
+    }
+
+    function renderRecentReviews() {
+        if (!recentReviewsContainer) return;
+        recentReviewsContainer.innerHTML = '';
+        const latest = (reviews || []).slice(0, 5);
+        if (!latest.length) {
+            recentReviewsContainer.style.display = 'none';
+            return;
+        }
+        recentReviewsContainer.style.display = 'grid';
+        latest.forEach(review => {
+            const card = document.createElement('div');
+            card.className = 'recent-review-card';
+            const date = review.created_at ? new Date(review.created_at).toLocaleDateString() : '';
+            card.innerHTML = `
+                <div class="recent-review-top">
+                    <div class="recent-review-name">${review.name || 'Guest'}</div>
+                    <div class="recent-review-date">${date}</div>
+                </div>
+                <div class="recent-review-stars">${'★'.repeat(review.rating || 0)}${'☆'.repeat(Math.max(0, 5 - (review.rating || 0)))}</div>
+                ${review.comment ? `<p class="recent-review-comment">${review.comment}</p>` : ''}
+            `;
+            recentReviewsContainer.appendChild(card);
         });
     }
 

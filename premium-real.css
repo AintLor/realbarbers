@@ -623,6 +623,50 @@ a {
     box-shadow: 0 0 30px var(--accent-color);
 }
 
+.recent-reviews {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.recent-review-card {
+    text-align: left;
+    padding: 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    color: #fff;
+}
+
+.recent-review-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.35rem;
+}
+
+.recent-review-name {
+    font-weight: 700;
+}
+
+.recent-review-date {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.recent-review-stars {
+    color: #ffd700;
+    letter-spacing: 1px;
+    margin-bottom: 0.35rem;
+}
+
+.recent-review-comment {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
 /* --- BOOKING & CONTACT --- */
 .booking-section {
     background: var(--bg-secondary);
