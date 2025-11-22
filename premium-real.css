@@ -350,28 +350,38 @@ a {
 }
 
 /* --- GALLERY --- */
+/* --- GALLERY (MARQUEE) --- */
 .gallery-section {
     background: var(--bg-color);
 }
 
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.gallery-marquee {
+    overflow: hidden;
+    position: relative;
+}
+
+.marquee-track {
+    display: flex;
     gap: 1.5rem;
+    animation: gallery-marquee 25s linear infinite;
+}
+
+.marquee-track:hover {
+    animation-play-state: paused;
 }
 
 .gallery-item {
     position: relative;
+    display: block;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 4px;
-    /* Sharper corners for premium look */
     background: rgba(255, 255, 255, 0.02);
     aspect-ratio: 1 / 1;
-    /* Square aspect ratio for uniformity */
+    width: clamp(180px, 18vw, 260px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     transition: all 0.4s var(--easing);
-    cursor: pointer;
+    flex: 0 0 auto;
 }
 
 .gallery-item img {
@@ -382,28 +392,11 @@ a {
     transition: transform 0.8s var(--easing), filter 0.4s ease;
 }
 
-/* Overlay with Icon */
-.gallery-item::before {
-    content: '\f00e';
-    /* fa-search-plus */
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    font-size: 2rem;
-    color: var(--accent-color);
-    z-index: 2;
-    transition: transform 0.4s var(--easing);
-    opacity: 0;
-}
-
 .gallery-item::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.3);
     opacity: 0;
     transition: opacity 0.4s ease;
     z-index: 1;
@@ -420,19 +413,26 @@ a {
     filter: grayscale(0%) contrast(1);
 }
 
-.gallery-item:hover::before {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-}
-
 .gallery-item:hover::after {
     opacity: 1;
 }
 
+@keyframes gallery-marquee {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
 @media (max-width: 768px) {
-    .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .marquee-track {
         gap: 1rem;
+        animation-duration: 20s;
+    }
+    .gallery-item {
+        width: clamp(160px, 44vw, 220px);
     }
 }
 
