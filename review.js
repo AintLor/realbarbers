@@ -79,6 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 reviewPopup.style.display = 'none';
             }
         });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && reviewPopup.style.display !== 'none') {
+                reviewPopup.style.display = 'none';
+            }
+        });
     }
 
     if (reviewForm) {
