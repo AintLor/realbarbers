@@ -542,12 +542,36 @@ label {
 
 .reservation-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 760px;
     background: var(--bg-secondary);
     padding: 4rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
     z-index: 2;
+}
+
+.reservation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.reservation-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.inline-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .reservation-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Location Section (Map) */

@@ -204,21 +204,22 @@
 			</div>
 
 			<form id="booking-form" method="POST">
-				<div class="form-group">
-					<label>Full Name</label>
-					<input type="text" id="client_name" name="client_name" class="form-control" required>
-				</div>
-				<div class="form-group">
-					<label>Email Address</label>
-					<input type="email" id="client_email" name="client_email" class="form-control" required>
-				</div>
-				<div class="form-group">
-					<label>Phone Number</label>
-					<input type="tel" id="client_mobile" name="client_mobile" class="form-control" required>
-				</div>
-
-				<div class="row">
-					<div class="col-md-6">
+				<div class="reservation-grid">
+					<div class="reservation-col">
+						<div class="form-group">
+							<label>Full Name</label>
+							<input type="text" id="client_name" name="client_name" class="form-control" required>
+						</div>
+						<div class="form-group">
+							<label>Email Address</label>
+							<input type="email" id="client_email" name="client_email" class="form-control" required>
+						</div>
+						<div class="form-group">
+							<label>Phone Number</label>
+							<input type="tel" id="client_mobile" name="client_mobile" class="form-control" required>
+						</div>
+					</div>
+					<div class="reservation-col">
 						<div class="form-group">
 							<label>Service</label>
 							<select id="specialty" name="specialty" class="form-control" required
@@ -228,8 +229,6 @@
 								<option value="Signature Haircut: ₱289">Signature Haircut: ₱289</option>
 							</select>
 						</div>
-					</div>
-					<div class="col-md-6">
 						<div class="form-group">
 							<label>Barber</label>
 							<select id="barber" name="barber" class="form-control" required style="background:#000;">
@@ -237,27 +236,21 @@
 								<!-- Populated by JS -->
 							</select>
 						</div>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label>Date</label>
-							<input type="date" id="date" name="appointment_date" class="form-control" required>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="form-group">
-							<label>Time</label>
-							<select id="time" name="appointment_time" class="form-control" required
-								style="background:#000;">
-								<option value="">Select Time</option>
-							</select>
+						<div class="inline-pair">
+							<div class="form-group">
+								<label>Date</label>
+								<input type="date" id="date" name="appointment_date" class="form-control" required>
+							</div>
+							<div class="form-group">
+								<label>Time</label>
+								<select id="time" name="appointment_time" class="form-control" required
+									style="background:#000;">
+									<option value="">Select Time</option>
+								</select>
+							</div>
 						</div>
 					</div>
 				</div>
-
 				<button type="submit" id="submit-btn" class="btn-glow mt-4" style="width:100%">Confirm Booking</button>
 			</form>
 			<div id="confirmation-message" class="mt-3 text-center"></div>
