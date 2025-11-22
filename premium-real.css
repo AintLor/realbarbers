@@ -629,7 +629,6 @@ label {
 
 /* Reservation Section */
 .reservation-section {
-    background: radial-gradient(circle at 20% 20%, rgba(41, 121, 255, 0.08), transparent 32%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.05), transparent 28%), #050505;
     padding: 12vh 5vw;
     display: flex;
     justify-content: center;
@@ -647,7 +646,6 @@ label {
 .reservation-card {
     background: linear-gradient(135deg, #0a0a0a, #0f0f12);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
     padding: 3rem;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
 }
@@ -760,8 +758,8 @@ label {
     background: linear-gradient(90deg, #ffffff, #dfe8ff);
     color: #000;
     border: 1px solid #fff;
-    border-radius: 10px;
     font-weight: 700;
+    font-size: medium;
     letter-spacing: 0.5px;
     cursor: pointer;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
