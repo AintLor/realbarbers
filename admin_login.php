@@ -5,6 +5,24 @@ require_once __DIR__ . '/auth.php';
 ensure_session();
 
 $error = '';
+$now = time();
+$maxAttempts = 5;
+$windowSeconds = 120; // 2 minutes
+$lockSeconds = 120;   // 2 minutes
+
+// Initialize attempt tracking
+if (!isset($_SESSION['admin_login_attempts'])) {
+    $_SESSION['admin_login_attempts'] = [];
+}
+if (!isset($_SESSION['admin_login_lock_until'])) {
+    $_SESSION['admin_login_lock_until'] = 0;
+}
+
+// Enforce lockout
+if ($_SESSION['admin_login_lock_until'] > $now) {
+    $remaining = $_SESSION['admin_login_lock_until'] - $now;
+    $error = 'Too many attempts. Please wait ' . ceil($remaining) . ' seconds before trying again.';
+}
 
 if (($_GET['action'] ?? '') === 'logout') {
     session_destroy();
@@ -13,6 +31,11 @@ if (($_GET['action'] ?? '') === 'logout') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // If locked, skip processing
+    if ($error) {
+        goto render;
+    }
+
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
@@ -24,13 +47,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($username === $envUser && hash_equals($envPass, $password)) {
         $_SESSION['admin_authenticated'] = true;
         $_SESSION['admin_username'] = $username;
+        $_SESSION['admin_login_attempts'] = [];
+        $_SESSION['admin_login_lock_until'] = 0;
         header('Location: admin.php');
         exit;
     } else {
         $error = 'Invalid credentials.';
+        // Record failed attempt
+        $_SESSION['admin_login_attempts'][] = $now;
+        // Keep only recent window
+        $_SESSION['admin_login_attempts'] = array_filter(
+            $_SESSION['admin_login_attempts'],
+            static fn($ts) => ($now - $ts) <= $windowSeconds
+        );
+        if (count($_SESSION['admin_login_attempts']) >= $maxAttempts) {
+            $_SESSION['admin_login_lock_until'] = $now + $lockSeconds;
+            $error = 'Too many attempts. Please wait ' . $lockSeconds . ' seconds before trying again.';
+        }
     }
 }
 
+render:
 $hasError = $error !== '';
 ?>
 <!DOCTYPE html>
