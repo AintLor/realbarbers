@@ -166,6 +166,48 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         .contact-stack div { line-height: 1.4; }
         .contact-stack small { color: var(--text-secondary); }
 
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0 0.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .table-controls select {
+            background: #0f1012;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+        }
+
+        .pager {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pager button {
+            background: #0f1012;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .pager button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .pager span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
     </style>
 </head>
 <body>
@@ -195,6 +237,23 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             </div>
 
             <div class="table-container">
+                <div class="table-controls">
+                    <div>
+                        <label for="bookingsPerPage" style="color:var(--text-secondary); font-size:0.85rem;">Show</label>
+                        <select id="bookingsPerPage">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span style="color:var(--text-secondary); font-size:0.85rem;">per page</span>
+                    </div>
+                    <div class="pager">
+                        <button id="bookingsPrev">&laquo; Prev</button>
+                        <span id="bookingsPageInfo">Page 1</span>
+                        <button id="bookingsNext">Next &raquo;</button>
+                    </div>
+                </div>
                 <table class="premium-table">
                     <thead>
                         <tr>
@@ -226,6 +285,23 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             </div>
 
             <div class="table-container">
+                <div class="table-controls">
+                    <div>
+                        <label for="reviewsPerPage" style="color:var(--text-secondary); font-size:0.85rem;">Show</label>
+                        <select id="reviewsPerPage">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span style="color:var(--text-secondary); font-size:0.85rem;">per page</span>
+                    </div>
+                    <div class="pager">
+                        <button id="reviewsPrev">&laquo; Prev</button>
+                        <span id="reviewsPageInfo">Page 1</span>
+                        <button id="reviewsNext">Next &raquo;</button>
+                    </div>
+                </div>
                 <table class="premium-table">
                     <thead>
                         <tr>
@@ -251,6 +327,17 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         const reviewsBody = document.getElementById('reviewsBody');
         const bookingStatus = document.getElementById('bookingStatus');
         const reviewStatus = document.getElementById('reviewStatus');
+        const bookingsPerPageSelect = document.getElementById('bookingsPerPage');
+        const reviewsPerPageSelect = document.getElementById('reviewsPerPage');
+        const bookingsPageInfo = document.getElementById('bookingsPageInfo');
+        const reviewsPageInfo = document.getElementById('reviewsPageInfo');
+        const bookingsPrev = document.getElementById('bookingsPrev');
+        const bookingsNext = document.getElementById('bookingsNext');
+        const reviewsPrev = document.getElementById('reviewsPrev');
+        const reviewsNext = document.getElementById('reviewsNext');
+
+        const bookingState = { data: [], page: 1, perPage: 20 };
+        const reviewState = { data: [], page: 1, perPage: 20 };
 
         // Cursor Logic
         const cursorDot = document.querySelector('.cursor-dot');
@@ -272,13 +359,23 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             return isNaN(date.getTime()) ? `${dateStr} ${timeStr || ''}`.trim() : date.toLocaleString();
         };
 
+        function updatePager(infoEl, prevBtn, nextBtn, page, totalPages, totalItems) {
+            if (infoEl) {
+                infoEl.textContent = `Page ${page} of ${totalPages} · ${totalItems} total`;
+            }
+            if (prevBtn) prevBtn.disabled = page <= 1;
+            if (nextBtn) nextBtn.disabled = page >= totalPages;
+        }
+
         async function loadBookings() {
             setStatus(bookingStatus, 'Syncing...');
             try {
                 const res = await fetch('admin_bookings.php');
                 const data = await res.json();
                 if (!res.ok || data.status !== 'success') throw new Error(data.message);
-                renderBookings(data.bookings || []);
+                bookingState.data = data.bookings || [];
+                bookingState.page = 1;
+                renderBookings();
                 setStatus(bookingStatus, `Last synced: ${new Date().toLocaleTimeString()}`);
             } catch (error) {
                 console.error(error);
@@ -286,14 +383,22 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             }
         }
 
-        function renderBookings(bookings) {
+        function renderBookings() {
+            const total = bookingState.data.length;
+            const perPage = bookingState.perPage;
+            const totalPages = Math.max(1, Math.ceil(total / perPage));
+            bookingState.page = Math.min(Math.max(1, bookingState.page), totalPages);
+            const start = (bookingState.page - 1) * perPage;
+            const pageItems = bookingState.data.slice(start, start + perPage);
+
             bookingsBody.innerHTML = '';
-            if (!bookings.length) {
+            if (!pageItems.length) {
                 bookingsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No bookings found.</td></tr>';
+                updatePager(bookingsPageInfo, bookingsPrev, bookingsNext, bookingState.page, totalPages, total);
                 return;
             }
 
-            bookings.forEach((b, idx) => {
+            pageItems.forEach((b, idx) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>#${b.id ?? idx + 1}</td>
@@ -313,6 +418,8 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 `;
                 bookingsBody.appendChild(row);
             });
+
+            updatePager(bookingsPageInfo, bookingsPrev, bookingsNext, bookingState.page, totalPages, total);
         }
 
         async function loadReviews() {
@@ -321,7 +428,9 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 const res = await fetch('review.php?action=adminReviews');
                 const data = await res.json();
                 if (!res.ok || data.status !== 'success') throw new Error(data.message);
-                renderReviews(data.reviews || []);
+                reviewState.data = data.reviews || [];
+                reviewState.page = 1;
+                renderReviews();
                 setStatus(reviewStatus, `Last synced: ${new Date().toLocaleTimeString()}`);
             } catch (error) {
                 console.error(error);
@@ -329,14 +438,22 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             }
         }
 
-        function renderReviews(reviews) {
+        function renderReviews() {
+            const total = reviewState.data.length;
+            const perPage = reviewState.perPage;
+            const totalPages = Math.max(1, Math.ceil(total / perPage));
+            reviewState.page = Math.min(Math.max(1, reviewState.page), totalPages);
+            const start = (reviewState.page - 1) * perPage;
+            const pageItems = reviewState.data.slice(start, start + perPage);
+
             reviewsBody.innerHTML = '';
-            if (!reviews.length) {
+            if (!pageItems.length) {
                 reviewsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No reviews yet.</td></tr>';
+                updatePager(reviewsPageInfo, reviewsPrev, reviewsNext, reviewState.page, totalPages, total);
                 return;
             }
 
-            reviews.forEach((r, idx) => {
+            pageItems.forEach((r, idx) => {
                 const isHidden = Number(r.hidden) === 1;
                 const row = document.createElement('tr');
                 if(isHidden) row.style.opacity = '0.4';
@@ -378,6 +495,36 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
         document.getElementById('refreshBookings')?.addEventListener('click', loadBookings);
         document.getElementById('refreshReviews')?.addEventListener('click', loadReviews);
+
+        const handlePerPageChange = (selectEl, state, renderFn) => {
+            if (!selectEl) return;
+            selectEl.addEventListener('change', () => {
+                const value = parseInt(selectEl.value, 10);
+                state.perPage = Number.isNaN(value) ? state.perPage : value;
+                state.page = 1;
+                renderFn();
+            });
+        };
+
+        const wirePager = (prevBtn, nextBtn, state, renderFn) => {
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    state.page = Math.max(1, state.page - 1);
+                    renderFn();
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    state.page += 1;
+                    renderFn();
+                });
+            }
+        };
+
+        handlePerPageChange(bookingsPerPageSelect, bookingState, renderBookings);
+        handlePerPageChange(reviewsPerPageSelect, reviewState, renderReviews);
+        wirePager(bookingsPrev, bookingsNext, bookingState, renderBookings);
+        wirePager(reviewsPrev, reviewsNext, reviewState, renderReviews);
         
         loadBookings();
         loadReviews();
