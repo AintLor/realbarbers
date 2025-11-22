@@ -1389,11 +1389,13 @@ body.no-scroll {
     background: rgba(255, 255, 255, 0.04);
     padding: 0.95rem 1rem;
     font-size: 1rem;
+    font-family: inherit;
     transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
 .review-popup textarea.form-control {
     min-height: 140px;
+    font-family: inherit;
     resize: vertical;
 }
 
