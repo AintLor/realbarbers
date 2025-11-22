@@ -238,10 +238,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const track = recentReviewsContainer.querySelector('.recent-track');
         const len = recentReviewsData.length;
 
-        const buildCard = (review, role) => {
+        const buildCard = (review, role, idx) => {
             const date = review.created_at ? new Date(review.created_at).toLocaleDateString() : '';
             const card = document.createElement('div');
             card.className = `recent-review-card ${role}`;
+            card.dataset.idx = String(idx);
             const rawComment = review.comment && review.comment.trim() ? review.comment.trim() : 'Great experience, highly recommended.';
             const comment = rawComment.length > 150 ? `${rawComment.slice(0, 150)}…` : rawComment;
             const author = review.name || 'Guest';
@@ -267,7 +268,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         visible.forEach(item => {
-            track.appendChild(buildCard(recentReviewsData[item.idx], item.role));
+            const card = buildCard(recentReviewsData[item.idx], item.role, item.idx);
+            card.addEventListener('click', () => {
+                recentIndex = item.idx;
+                renderRecentReviews();
+            });
+            track.appendChild(card);
         });
 
         // Swipe / scrollable experience: allow wheel/drag to update active
