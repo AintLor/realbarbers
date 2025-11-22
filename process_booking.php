@@ -36,6 +36,7 @@ try {
     }
 
     $barberName = substr(htmlspecialchars(trim($data['name'])), 0, 100);
+    $barberId = isset($data['barber_id']) ? (int) $data['barber_id'] : null;
     $date = date('Y-m-d', strtotime($data['date']));
     $time = date('H:i', strtotime($data['time']));
     $service = substr(htmlspecialchars(trim($data['specialty'])), 0, 100);
@@ -51,63 +52,10 @@ try {
         throw new InvalidArgumentException("Invalid email format.");
     }
 
-    $selectedDay = date('l', strtotime($date));
-
-    $barberAvailability = [
-        "Barber Angelo" => [
-            "Sunday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Monday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Tuesday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Wednesday" => [],
-            "Thursday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Friday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Saturday" => ['11:00', '14:00', '15:00', '16:00', '17:00']
-        ],
-        "Barber Reymart" => [
-            "Sunday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Monday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Tuesday" => [],
-            "Wednesday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Thursday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Friday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Saturday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-        ],
-        "Barber Rod" => [
-            "Sunday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Monday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Tuesday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Wednesday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Thursday" => [],
-            "Friday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Saturday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-        ],
-        "Barber Lyndon" => [
-            "Sunday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Monday" => [],
-            "Tuesday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Wednesday" => ['11:00', '14:00', '15:00', '16:00', '17:00'],
-            "Thursday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Friday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Saturday" => ['11:00', '14:00', '15:00', '16:00', '17:00']
-        ],
-        "Barber Ed" => [
-            "Sunday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Monday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Tuesday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Wednesday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Thursday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-            "Friday" => [],
-            "Saturday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-        ]
-    ];
-
-    if (!isset($barberAvailability[$barberName][$selectedDay]) ||
-        !in_array($time, $barberAvailability[$barberName][$selectedDay], true)) {
-        throw new InvalidArgumentException("The selected time is not available for {$barberName} on {$date}.");
-    }
 
     $appointmentData = [
         'name' => $barberName,
+        'barber_id' => $barberId,
         'date' => $date,
         'time' => $time,
         'specialty' => $service,
@@ -144,6 +92,7 @@ try {
         "message" => "Appointment added successfully.",
         "appointment" => [
             "name" => $barberName,
+            "barber_id" => $barberId,
             "date" => $date,
             "time" => $time,
             "specialty" => $service,

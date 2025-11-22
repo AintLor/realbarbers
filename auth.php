@@ -3,8 +3,21 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config/env.php';
 
+function ensure_session(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
 function require_admin_auth(bool $asJson = true): void
 {
+    ensure_session();
+
+    if (!empty($_SESSION['admin_authenticated'])) {
+        return;
+    }
+
     $username = env_value('ADMIN_USERNAME');
     $password = env_value('ADMIN_PASSWORD');
 
@@ -26,17 +39,20 @@ function require_admin_auth(bool $asJson = true): void
 
     $authorized = $providedUser === $username && hash_equals($password, $providedPass);
 
-    if (!$authorized) {
-        header('WWW-Authenticate: Basic realm="RealBarbers Admin"');
-        http_response_code(401);
-        if ($asJson) {
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
-        } else {
-            header('Content-Type: text/plain');
-            echo 'Unauthorized';
-        }
-        exit;
+    if ($authorized) {
+        $_SESSION['admin_authenticated'] = true;
+        $_SESSION['admin_username'] = $providedUser;
+        return;
     }
-}
 
+    header('WWW-Authenticate: Basic realm="RealBarbers Admin"');
+    http_response_code(401);
+    if ($asJson) {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    } else {
+        header('Content-Type: text/plain');
+        echo 'Unauthorized';
+    }
+    exit;
+}

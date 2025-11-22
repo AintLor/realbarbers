@@ -4,6 +4,7 @@ declare(strict_types=1);
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/schema.php';
 require_once __DIR__ . '/auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -15,30 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 try {
     require_admin_auth();
     $conn = get_mysqli_connection();
+    ensure_core_schema($conn);
 
-    $createTable = "CREATE TABLE IF NOT EXISTS appointments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        date DATE NOT NULL,
-        time TIME NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        specialty VARCHAR(255) NOT NULL,
-        client_name VARCHAR(255) NOT NULL,
-        client_email VARCHAR(255) NOT NULL,
-        client_mobile VARCHAR(30) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_date_time (date, time)
-    )";
+    $query = "SELECT r.id, DATE(r.scheduled_at) AS date, TIME(r.scheduled_at) AS time,
+                     b.name AS barber_name, s.name AS service_name,
+                     u.name AS client_name, u.email AS client_email, u.phone AS client_mobile,
+                     r.status, r.created_at
+              FROM reservations r
+              LEFT JOIN barbers b ON r.barber_id = b.id
+              LEFT JOIN services s ON r.service_id = s.id
+              JOIN users u ON r.user_id = u.id
+              ORDER BY r.scheduled_at DESC";
 
-    if (!$conn->query($createTable)) {
-        throw new RuntimeException('Error ensuring appointments table exists: ' . $conn->error);
-    }
-
-    $result = $conn->query(
-        'SELECT id, date, time, name, specialty, client_name, client_email, client_mobile, created_at
-         FROM appointments
-         ORDER BY date DESC, time DESC'
-    );
-
+    $result = $conn->query($query);
     if (!$result) {
         throw new RuntimeException('Error fetching appointments: ' . $conn->error);
     }

@@ -4,54 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const appointments = [];
-
-const availableTimesMap = {
-    "Barber Angelo": {
-        "Sunday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Monday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Tuesday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Wednesday": [],
-        "Thursday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Friday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Saturday": ['11:00', '14:00', '15:00', '16:00', '17:00']
-    },
-    "Barber Reymart": {
-        "Sunday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Monday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Tuesday": [],
-        "Wednesday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Thursday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Friday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Saturday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-    },
-    "Barber Rod": {
-        "Sunday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Monday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Tuesday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Wednesday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Thursday": [],
-        "Friday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Saturday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-    },
-    "Barber Lyndon": {
-        "Sunday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Monday": [],
-        "Tuesday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Wednesday": ['11:00', '14:00', '15:00', '16:00', '17:00'],
-        "Thursday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Friday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Saturday": ['11:00', '14:00', '15:00', '16:00', '17:00']
-    },
-    "Barber Ed": {
-        "Sunday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Monday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Tuesday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Wednesday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Thursday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
-        "Friday": [],
-        "Saturday": ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
-    }
-};
+let barbersCache = [];
 
 const bookingForm = document.getElementById("booking-form");
 if (bookingForm) {
@@ -110,14 +63,16 @@ function saveAppointment() {
     const appointmentId = document.getElementById('id')?.value.trim();
     const date = document.getElementById('date')?.value.trim();
     const time = document.getElementById('time')?.value.trim();
-    const barberName = document.getElementById('barber')?.value.trim();
+    const barberSelect = document.getElementById('barber');
+    const barberId = barberSelect?.value.trim();
+    const barberName = barberSelect?.options[barberSelect.selectedIndex]?.dataset.name || '';
     const specialty = document.getElementById('specialty')?.value.trim();
     const clientName = document.getElementById('client_name')?.value.trim();
     const clientEmail = document.getElementById('client_email')?.value.trim();
     const clientMobile = document.getElementById('client_mobile')?.value.trim();
 
     const isDoubleBooked = appointments.some(app =>
-        app.date === date && app.time === time && app.name === barberName && app.id !== appointmentId
+        app.date === date && app.time === time && app.barber_id === barberId && app.id !== appointmentId
     );
 
     if (isDoubleBooked) {
@@ -131,6 +86,7 @@ function saveAppointment() {
         date,
         time,
         name: barberName,
+        barber_id: barberId,
         specialty,
         client_name: clientName,
         client_email: clientEmail,
@@ -233,6 +189,7 @@ function fetchBarbers() {
         })
         .then(data => {
             if (data.success && Array.isArray(data.barbers)) {
+                barbersCache = data.barbers;
                 populateBarbers(data.barbers);
             } else {
                 alert('Failed to load barbers.');
@@ -253,43 +210,56 @@ function populateBarbers(barbers) {
     barberSelect.innerHTML = '<option value="" disabled selected>Select Barber</option>';
     barbers.forEach(barber => {
         const option = document.createElement('option');
-        option.value = barber.name;
+        option.value = barber.id;
         option.textContent = barber.name;
+        option.dataset.name = barber.name;
         barberSelect.appendChild(option);
     });
 
     barberSelect.addEventListener('change', () => {
-        const selectedBarber = barberSelect.value;
+        const selectedBarberId = barberSelect.value;
         const selectedDate = document.getElementById('date')?.value.trim();
-        if (selectedBarber && selectedDate) {
-            populateAvailableTimes(selectedBarber, selectedDate);
+        if (selectedBarberId && selectedDate) {
+            populateAvailableTimes(selectedBarberId, selectedDate);
         }
     });
 }
 
-function populateAvailableTimes(barberName, selectedDate) {
+function populateAvailableTimes(barberId, selectedDate) {
     const timeSelect = document.getElementById('time');
     if (!timeSelect) return;
 
     timeSelect.innerHTML = '<option value="" disabled selected>Select Time</option>';
 
-    const selectedDay = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
-    const availableTimes = availableTimesMap[barberName]?.[selectedDay] || [];
-
-    if (availableTimes.length === 0) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'No available times - Barber is off';
-        timeSelect.appendChild(option);
+    if (!barberId || !selectedDate) {
         return;
     }
 
-    availableTimes.forEach(time => {
-        const option = document.createElement('option');
-        option.value = time;
-        option.textContent = time;
-        timeSelect.appendChild(option);
-    });
+    fetch(`get_availability.php?barber_id=${encodeURIComponent(barberId)}&date=${encodeURIComponent(selectedDate)}`)
+        .then(response => response.json())
+        .then(data => {
+            const availableTimes = data.available_times || [];
+            if (!data.success || availableTimes.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No available times';
+                timeSelect.appendChild(option);
+                return;
+            }
+
+            availableTimes.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                timeSelect.appendChild(option);
+            });
+        })
+        .catch(() => {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Unable to load times';
+            timeSelect.appendChild(option);
+        });
 }
 
 function initializeDateHandlers() {

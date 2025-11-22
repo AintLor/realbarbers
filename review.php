@@ -4,33 +4,8 @@ declare(strict_types=1);
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/schema.php';
 require_once __DIR__ . '/auth.php';
-
-function ensure_schema(mysqli $connection): void
-{
-    $createTable = "CREATE TABLE IF NOT EXISTS reviews (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        rating INT NOT NULL,
-        comment TEXT,
-        hidden TINYINT(1) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-
-    if (!$connection->query($createTable)) {
-        throw new RuntimeException('Error creating table: ' . $connection->error);
-    }
-
-    $columnResult = $connection->query("SHOW COLUMNS FROM reviews LIKE 'hidden'");
-    if ($columnResult instanceof mysqli_result && $columnResult->num_rows === 0) {
-        $connection->query("ALTER TABLE reviews ADD COLUMN hidden TINYINT(1) NOT NULL DEFAULT 0");
-    }
-
-    $indexResult = $connection->query("SHOW INDEX FROM reviews WHERE Key_name = 'idx_hidden'");
-    if ($indexResult instanceof mysqli_result && $indexResult->num_rows === 0) {
-        $connection->query("CREATE INDEX idx_hidden ON reviews (hidden)");
-    }
-}
 
 function fetch_rating_stats(mysqli $connection, bool $includeHidden = false): array
 {
@@ -76,7 +51,7 @@ function fetch_reviews(mysqli $connection, bool $includeHidden = false, int $lim
 
 try {
     $conn = get_mysqli_connection();
-    ensure_schema($conn);
+    ensure_core_schema($conn);
 
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? '';
@@ -122,17 +97,40 @@ try {
         $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
         $rating = (int) ($_POST['rating'] ?? 0);
         $comment = $conn->real_escape_string(trim($_POST['comment'] ?? ''));
+        $email = trim($_POST['email'] ?? '');
+        $reservationId = isset($_POST['reservation_id']) ? (int) $_POST['reservation_id'] : null;
+        $userId = null;
 
         if ($name === '' || $rating < 1 || $rating > 5) {
             throw new InvalidArgumentException('Invalid input: Name and rating (1-5) are required.');
         }
 
-        $stmt = $conn->prepare('INSERT INTO reviews (name, rating, comment, hidden) VALUES (?, ?, ?, 0)');
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            // Fetch or create user for linkage
+            $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            $row = $res->fetch_assoc();
+            if ($row) {
+                $userId = (int) $row['id'];
+            } else {
+                $stmtInsert = $conn->prepare('INSERT INTO users (role, name, email) VALUES (\'customer\', ?, ?)');
+                $stmtInsert->bind_param('ss', $name, $email);
+                $stmtInsert->execute();
+                $userId = $conn->insert_id;
+                $stmtInsert->close();
+            }
+            $stmt->close();
+        }
+
+        $stmt = $conn->prepare('INSERT INTO reviews (reservation_id, user_id, name, rating, comment, hidden) VALUES (?, ?, ?, ?, ?, 0)');
         if (!$stmt) {
             throw new RuntimeException('Prepare failed: ' . $conn->error);
         }
 
-        $stmt->bind_param('sis', $name, $rating, $comment);
+        // i = reservation_id, i = user_id, s = name, i = rating, s = comment
+        $stmt->bind_param('iisis', $reservationId, $userId, $name, $rating, $comment);
         if (!$stmt->execute()) {
             throw new RuntimeException('Execute failed: ' . $stmt->error);
         }
