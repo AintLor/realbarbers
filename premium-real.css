@@ -980,7 +980,7 @@ label {
 /* --- FOOTER STYLES --- */
 .footer-section {
     background: #050505;
-    padding: 5rem 5vw;
+    padding: 5rem 5vw 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1022,6 +1022,12 @@ label {
     text-align: center;
     font-size: 0.8rem;
     color: #444;
+    padding: 1.25rem 0 0;
+    margin: 0;
+}
+
+.copyright p {
+    margin: 0;
 }
 
 @media (max-width: 768px) {
