@@ -25,7 +25,7 @@ try {
 
     $id = (int) ($payload['id'] ?? 0);
     $status = $payload['status'] ?? 'completed';
-    $allowedStatuses = ['completed'];
+    $allowedStatuses = ['completed', 'pending'];
 
     if ($id <= 0 || !in_array($status, $allowedStatuses, true)) {
         throw new InvalidArgumentException('A valid booking id and status are required.');
