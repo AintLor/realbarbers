@@ -1397,3 +1397,15 @@ body.no-scroll {
         margin-bottom: 1.75rem;
     }
 }
+
+/* Disable custom cursor on mobile */
+@media (max-width: 768px) {
+    * {
+        cursor: auto !important;
+    }
+
+    .cursor-dot,
+    .cursor-outline {
+        display: none;
+    }
+}
