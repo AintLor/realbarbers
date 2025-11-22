@@ -542,7 +542,7 @@ label {
 
 .reservation-container {
     width: 100%;
-    max-width: 760px;
+    max-width: 900px;
     background: var(--bg-secondary);
     padding: 4rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
