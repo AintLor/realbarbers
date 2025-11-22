@@ -1,105 +1,58 @@
 <?php
-// Disable output buffering
-if (ob_get_length()) ob_end_clean();
+declare(strict_types=1);
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+require_once __DIR__ . '/config/env.php';
 
-// Set JSON header immediately
 header('Content-Type: application/json');
 
-// Custom error handler
-function handleError($errno, $errstr, $errfile, $errline) {
-    $error = [
-        "success" => false,
-        "message" => "Server error occurred",
-        "debug" => [
-            "error" => $errstr,
-            "file" => $errfile,
-            "line" => $errline
-        ]
-    ];
-    echo json_encode($error);
-    exit;
-}
-set_error_handler("handleError");
+set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
+    throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+});
 
-// Custom exception handler
-function handleException($exception) {
-    $error = [
-        "success" => false,
-        "message" => "Server error occurred",
-        "debug" => [
-            "error" => $exception->getMessage(),
-            "file" => $exception->getFile(),
-            "line" => $exception->getLine()
-        ]
-    ];
-    echo json_encode($error);
-    exit;
-}
-set_exception_handler("handleException");
-
-// Prevent direct access
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
     echo json_encode([
         "success" => false,
-        "message" => "Direct access not allowed"
+        "message" => "Direct access not allowed",
     ]);
     exit;
 }
 
 try {
-    // Get and validate input
+    validate_required_env(['BOOKING_API_URL']);
+    $apiEndpoint = require_env('BOOKING_API_URL');
+
     $rawData = file_get_contents("php://input");
-    if (!$rawData) {
-        throw new Exception("No data received");
+    if ($rawData === false || $rawData === '') {
+        throw new InvalidArgumentException("No data received");
     }
 
-    $data = json_decode($rawData, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception("Invalid JSON in request body: " . json_last_error_msg());
-    }
+    $data = json_decode($rawData, true, 512, JSON_THROW_ON_ERROR);
 
-    // Validate required fields
     $requiredFields = ['client_name', 'client_email', 'client_mobile', 'specialty', 'name', 'date', 'time'];
-    $missingFields = array_filter($requiredFields, function ($field) use ($data) {
-        return empty($data[$field]);
-    });
-
-    if (count($missingFields) > 0) {
-        throw new Exception("Missing required fields: " . implode(', ', $missingFields));
+    $missingFields = array_filter($requiredFields, static fn($field) => empty($data[$field]));
+    if (!empty($missingFields)) {
+        throw new InvalidArgumentException("Missing required fields: " . implode(', ', $missingFields));
     }
 
-    // Validate and sanitize input
     $barberName = substr(htmlspecialchars(trim($data['name'])), 0, 100);
-    
-    // Validate date format
     $date = date('Y-m-d', strtotime($data['date']));
-    if (!$date) {
-        throw new Exception("Invalid date format");
-    }
-    
-    // Validate time format
     $time = date('H:i', strtotime($data['time']));
-    if (!$time) {
-        throw new Exception("Invalid time format");
-    }
-    
     $service = substr(htmlspecialchars(trim($data['specialty'])), 0, 100);
     $clientName = substr(htmlspecialchars(trim($data['client_name'])), 0, 255);
     $clientEmail = substr(htmlspecialchars(trim($data['client_email'])), 0, 255);
     $clientPhone = substr(htmlspecialchars(trim($data['client_mobile'])), 0, 15);
 
-    // Validate email format
+    if ($date === false || $time === false) {
+        throw new InvalidArgumentException("Invalid date or time format");
+    }
+
     if (!filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
-        throw new Exception("Invalid email format.");
+        throw new InvalidArgumentException("Invalid email format.");
     }
 
     $selectedDay = date('l', strtotime($date));
 
-    // Barber availability
     $barberAvailability = [
         "Barber Angelo" => [
             "Sunday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'],
@@ -147,13 +100,12 @@ try {
             "Saturday" => ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']
         ]
     ];
-    // Check availability
-    if (!isset($barberAvailability[$barberName][$selectedDay]) || 
-        !in_array($time, $barberAvailability[$barberName][$selectedDay])) {
-        throw new Exception("The selected time is not available for $barberName on $date.");
+
+    if (!isset($barberAvailability[$barberName][$selectedDay]) ||
+        !in_array($time, $barberAvailability[$barberName][$selectedDay], true)) {
+        throw new InvalidArgumentException("The selected time is not available for {$barberName} on {$date}.");
     }
 
-    // Prepare data for API request
     $appointmentData = [
         'name' => $barberName,
         'date' => $date,
@@ -161,38 +113,32 @@ try {
         'specialty' => $service,
         'client_name' => $clientName,
         'client_email' => $clientEmail,
-        'client_mobile' => $clientPhone
+        'client_mobile' => $clientPhone,
     ];
 
-    // Initialize cURL session
-    $ch = curl_init('http://localhost/PROG%20Management/barber-website-backend/api.php');
+    $ch = curl_init($apiEndpoint);
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($appointmentData));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($appointmentData, JSON_THROW_ON_ERROR));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Content-Type: application/json'
-    ]);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
 
-    // Execute API request
     $response = curl_exec($ch);
-    
-    if(curl_errno($ch)) {
-        throw new Exception("API request failed: " . curl_error($ch));
+    if ($response === false) {
+        throw new RuntimeException("API request failed: " . curl_error($ch));
     }
-    
+
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    if($httpCode !== 200) {
-        throw new Exception("API request failed with status code: " . $httpCode);
+    if ($httpCode !== 200) {
+        throw new RuntimeException("API request failed with status code: {$httpCode}");
     }
 
     $apiResponse = json_decode($response, true);
-    if(!$apiResponse) {
-        throw new Exception("Invalid response from API");
+    if (!is_array($apiResponse)) {
+        throw new RuntimeException("Invalid response from API");
     }
 
-    // Return success response
     echo json_encode([
         "success" => true,
         "message" => "Appointment added successfully.",
@@ -203,15 +149,15 @@ try {
             "specialty" => $service,
             "client_name" => $clientName,
             "client_email" => $clientEmail,
-            "client_mobile" => $clientPhone
-        ]
+            "client_mobile" => $clientPhone,
+        ],
     ]);
-
-} catch (Exception $e) {
+} catch (Throwable $exception) {
+    http_response_code(400);
     echo json_encode([
         "success" => false,
-        "message" => $e->getMessage()
+        "message" => $exception->getMessage(),
     ]);
 }
 
-exit();
+exit;

@@ -1,42 +1,34 @@
 <?php
-class Database {
-    private $host = "localhost";
-    private $database = "realbarbers_db";
-    private $username = "lorenz";
-    private $password = "lorenz@21";
-    public $conn;
+declare(strict_types=1);
 
-    public function getConnection() {
-        $this->conn = null;
-        try {
-            $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->database,
-                $this->username,
-                $this->password
-            );
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch(PDOException $e) {
-            echo "Connection error: " . $e->getMessage();
+require_once dirname(__DIR__, 2) . '/config/database.php';
+
+class Database
+{
+    private ?PDO $conn = null;
+
+    public function getConnection(): PDO
+    {
+        if ($this->conn === null) {
+            $this->conn = get_pdo_connection();
         }
+
         return $this->conn;
     }
 
-    // Test the connection
-    public function testConnection() {
+    public function testConnection(): string
+    {
         try {
             $this->getConnection();
             return "Database connection successful!";
-        } catch(PDOException $e) {
-            return "Connection failed: " . $e->getMessage();
+        } catch (PDOException $exception) {
+            return "Connection failed: " . $exception->getMessage();
         }
     }
 
-    // Close the database connection
-    public function closeConnection() {
-        if ($this->conn !== null) {
-            $this->conn = null;
-            return "Database connection closed successfully!";
-        }
-        return "No active connection to close.";
+    public function closeConnection(): string
+    {
+        $this->conn = null;
+        return "Database connection closed successfully!";
     }
 }

@@ -1,79 +1,9 @@
-document.getElementById("booking-form").addEventListener("submit", function(event) {
-    console.log("checkpoint")
-    event.preventDefault(); // Prevent default form submission
-
-        // Validate fields
-        if (!validateForm()) {
-            return; // Stop if validation fails
-        }   
-
-    var formValid = true;
-    var errorMessages = [];
-
-    // Check for empty fields
-    const fields = {
-        "Full name": "client_name",
-        "Email": "client_email",
-        "Phone number": "client_mobile",
-        "Service selection": "specialty",
-        "Select Barber": "barber",
-        "Preferred appointment date": "date",
-        "Preferred appointment time": "time"
-    };
-
-    for (const [label, id] of Object.entries(fields)) {
-        if (!document.getElementById(id)?.value) {
-            errorMessages.push(`${label} is required.`);
-            formValid = false;
-        }
-    }
-
-    if (!formValid) {
-        alert(errorMessages.join("\n"));
-        return;
-    }
-
-    // Prepare data for submission
-    const formData = {
-        client_name: document.getElementById("client_name").value,
-        client_email: document.getElementById("client_email").value,
-        client_mobile: document.getElementById("client_mobile").value,
-        specialty: document.getElementById("specialty").value,
-        name: document.getElementById("barber").value,
-        date: document.getElementById("date").value,
-        time: document.getElementById("time").value
-    };
-
- console.log("checkpoint")
- 
-    // Send data to the server
-    fetch('process_booking.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        const messageDiv = document.getElementById("response-message");
-        if (data.success) {
-            messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            // Optionally, reset the form
-            document.getElementById("booking-form").reset();
-        } else {
-            messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.message}</div>`;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById("response-message").innerHTML = `<div class="alert alert-danger">An error occurred while submitting the form.</div>`;
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    fetchBarbers();
+    initializeDateHandlers();
 });
 
-// Global array for appointments
-let appointments = [];
-
+const appointments = [];
 
 const availableTimesMap = {
     "Barber Angelo": {
@@ -123,32 +53,16 @@ const availableTimesMap = {
     }
 };
 
-// Fetch barbers and set up event listeners when the document is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    fetchBarbers();
-    setupFormSubmission();
-});
-
-// Function to set up the form submission event listener
-function setupFormSubmission() {
-    const submitButton = document.getElementById("submit-btn");
-    if (submitButton) {
-        submitButton.addEventListener("click", handleFormSubmission);
-    } else {
-        console.error("Submit button not found.");
-    }
+const bookingForm = document.getElementById("booking-form");
+if (bookingForm) {
+    bookingForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (validateForm()) {
+            saveAppointment();
+        }
+    });
 }
 
-// Event handler for form submission
-function handleFormSubmission(event) {
-    event.preventDefault(); // Prevent default behavior
-
-    if (validateForm()) {
-        saveAppointment();
-    }
-}
-
-// Function to validate the form
 function validateForm() {
     let isValid = true;
     const errorMessages = [];
@@ -184,7 +98,6 @@ function validateForm() {
     return isValid;
 }
 
-// Function to reset form fields
 function resetFormFields() {
     const fields = ['client_name', 'client_email', 'client_mobile', 'specialty', 'barber', 'date', 'time'];
     fields.forEach(field => {
@@ -193,7 +106,6 @@ function resetFormFields() {
     });
 }
 
-// Function to save appointment (add or update)
 function saveAppointment() {
     const appointmentId = document.getElementById('id')?.value.trim();
     const date = document.getElementById('date')?.value.trim();
@@ -204,7 +116,7 @@ function saveAppointment() {
     const clientEmail = document.getElementById('client_email')?.value.trim();
     const clientMobile = document.getElementById('client_mobile')?.value.trim();
 
-    const isDoubleBooked = appointments.some(app => 
+    const isDoubleBooked = appointments.some(app =>
         app.date === date && app.time === time && app.name === barberName && app.id !== appointmentId
     );
 
@@ -213,7 +125,7 @@ function saveAppointment() {
         return;
     }
 
-    const endpoint = appointmentId ? 'update_booking.php' : 'http://localhost/PROG%20management/barber-website/process_booking.php';
+    const endpoint = appointmentId ? 'update_booking.php' : 'process_booking.php';
     const requestBody = {
         id: appointmentId,
         date,
@@ -240,6 +152,7 @@ function saveAppointment() {
         }
     })
     .then(data => {
+        const messageDiv = document.getElementById("response-message");
         if (data.success) {
             if (appointmentId) {
                 const index = appointments.findIndex(app => app.id === appointmentId);
@@ -252,54 +165,64 @@ function saveAppointment() {
             renderAppointmentsList();
             resetFormFields();
 
-            // Log the values to check if they are correct
-            console.log(`Client: ${clientName}, Barber: ${barberName}, Date: ${date}, Time: ${time}`);
-
-            // Show confirmation message
             const confirmationMessage = document.getElementById("confirmation-message");
-            confirmationMessage.innerHTML = `
-                <div class="alert alert-success">
-                    Appointment booked successfully!<br>
-                    Client: ${clientName}<br>
-                    Barber: ${barberName}<br>
-                    Date: ${date}<br>
-                    Time: ${time}<br>
-                    Service: ${specialty}<br>
-                    please take a screenshot and present this to the receptionist on the day of your appointment.
-                </div>
-            `;
-            confirmationMessage.style.display = 'block'; // Show the message
+            if (confirmationMessage) {
+                confirmationMessage.innerHTML = `
+                    <div class="alert alert-success">
+                        Appointment booked successfully!<br>
+                        Client: ${clientName}<br>
+                        Barber: ${barberName}<br>
+                        Date: ${date}<br>
+                        Time: ${time}<br>
+                        Service: ${specialty}<br>
+                        please take a screenshot and present this to the receptionist on the day of your appointment.
+                    </div>
+                `;
+                confirmationMessage.style.display = 'block';
+            }
+
+            if (messageDiv) {
+                messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+            }
         } else {
             const errorMessage = data.message || 'Unknown error occurred';
             alert('Failed to save appointment: ' + errorMessage);
+            if (messageDiv) {
+                messageDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while saving the appointment. Please try again later.');
+        const messageDiv = document.getElementById("response-message");
+        if (messageDiv) {
+            messageDiv.innerHTML = `<div class="alert alert-danger">An error occurred while submitting the form.</div>`;
+        } else {
+            alert('An error occurred while submitting the form.');
+        }
     });
 }
 
-// Function to render the appointments list
 function renderAppointmentsList() {
     const appointmentsList = document.getElementById('appointments-list');
-    if (appointmentsList) {
-        appointmentsList.innerHTML = ''; // Clear previous entries
-        appointments.forEach(appointment => {
-            const appointmentDiv = document.createElement('div');
-            appointmentDiv.classList.add('appointment-entry');
-
-            appointmentDiv.innerHTML = `
-                <div class="appointment-details">
-                    <span>${appointment.date} ${appointment.time} - ${appointment.specialty} with ${appointment.name} (Client: ${appointment.client_name}, Email: ${appointment.client_email}, Mobile: ${appointment.client_mobile})</span>
-                </div>
-            `;
-            appointmentsList.appendChild(appointmentDiv);
-        });
+    if (!appointmentsList) {
+        return;
     }
+
+    appointmentsList.innerHTML = '';
+    appointments.forEach(appointment => {
+        const appointmentDiv = document.createElement('div');
+        appointmentDiv.classList.add('appointment-entry');
+
+        appointmentDiv.innerHTML = `
+            <div class="appointment-details">
+                <span>${appointment.date} ${appointment.time} - ${appointment.specialty} with ${appointment.name} (Client: ${appointment.client_name}, Email: ${appointment.client_email}, Mobile: ${appointment.client_mobile})</span>
+            </div>
+        `;
+        appointmentsList.appendChild(appointmentDiv);
+    });
 }
 
-// Fetch barbers from the server
 function fetchBarbers() {
     fetch('get_barbers.php')
         .then(response => {
@@ -321,45 +244,38 @@ function fetchBarbers() {
         });
 }
 
-// Populate barber dropdown
 function populateBarbers(barbers) {
     const barberSelect = document.getElementById('barber');
-    if (barberSelect) {
-        barberSelect.innerHTML = '<option value="" disabled selected>Select Barber</option>';
-        barbers.forEach(barber => {
-            const option = document.createElement('option');
-            option.value = barber.name;
-            option.textContent = barber.name;
-            barberSelect.appendChild(option);
-        });
-
-        // Add event listener for barber selection
-        barberSelect.addEventListener('change', () => {
-            const selectedBarber = barberSelect.value;
-            const selectedDate = document.getElementById('date')?.value.trim();
-            if (selectedBarber && selectedDate) {
-                populateAvailableTimes(selectedBarber, selectedDate);
-            }
-        });
+    if (!barberSelect) {
+        return;
     }
+
+    barberSelect.innerHTML = '<option value="" disabled selected>Select Barber</option>';
+    barbers.forEach(barber => {
+        const option = document.createElement('option');
+        option.value = barber.name;
+        option.textContent = barber.name;
+        barberSelect.appendChild(option);
+    });
+
+    barberSelect.addEventListener('change', () => {
+        const selectedBarber = barberSelect.value;
+        const selectedDate = document.getElementById('date')?.value.trim();
+        if (selectedBarber && selectedDate) {
+            populateAvailableTimes(selectedBarber, selectedDate);
+        }
+    });
 }
 
-// Function to populate available times for a selected barber on a specific date
 function populateAvailableTimes(barberName, selectedDate) {
     const timeSelect = document.getElementById('time');
     if (!timeSelect) return;
 
-    // Clear existing options
     timeSelect.innerHTML = '<option value="" disabled selected>Select Time</option>';
 
-    // Convert the selected date to a day of the week
     const selectedDay = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
-    console.log(`Fetching available times for ${barberName} on ${selectedDay}`); // Debug line
-
-    // Get available times for the selected barber and day
     const availableTimes = availableTimesMap[barberName]?.[selectedDay] || [];
 
-    // If no times available for this day
     if (availableTimes.length === 0) {
         const option = document.createElement('option');
         option.value = '';
@@ -368,41 +284,34 @@ function populateAvailableTimes(barberName, selectedDate) {
         return;
     }
 
-    // Add available times as options
     availableTimes.forEach(time => {
         const option = document.createElement('option');
         option.value = time;
         option.textContent = time;
         timeSelect.appendChild(option);
     });
-
-    console.log(`Available times for ${barberName} on ${selectedDay}:`, availableTimes); // Debug line
 }
 
-// Add event listeners for date and barber selection
-document.addEventListener('DOMContentLoaded', () => {
+function initializeDateHandlers() {
     const dateInput = document.getElementById('date');
     const barberSelect = document.getElementById('barber');
 
-    if (dateInput && barberSelect) {
-        // Set minimum date to today
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.min = today;
-
-        // Listen for date changes
-        dateInput.addEventListener('change', () => {
-            if (barberSelect.value) {
-                populateAvailableTimes(barberSelect.value, dateInput.value);
-            }
-        });
-
-        // Listen for barber changes
-        barberSelect.addEventListener('change', () => {
-            if (dateInput.value) {
-                populateAvailableTimes(barberSelect.value, dateInput.value);
-            }
-        });
-    } else {
-        console.error("Date input or barber select not found."); // Debug line
+    if (!dateInput || !barberSelect) {
+        return;
     }
-});
+
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+
+    dateInput.addEventListener('change', () => {
+        if (barberSelect.value) {
+            populateAvailableTimes(barberSelect.value, dateInput.value);
+        }
+    });
+
+    barberSelect.addEventListener('change', () => {
+        if (dateInput.value) {
+            populateAvailableTimes(barberSelect.value, dateInput.value);
+        }
+    });
+}

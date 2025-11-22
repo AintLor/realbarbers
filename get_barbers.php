@@ -1,48 +1,37 @@
 <?php
+declare(strict_types=1);
+
 header('Content-Type: application/json');
 
-// Database connection parameters
-$host = 'localhost';
-$dbname = 'realbarbers_db'; // Your database name
-$username = 'lorenz';       // Your database username
-$password = 'lorenz@21';    // Your database password
+require_once __DIR__ . '/config/database.php';
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $dbname);
+try {
+    $conn = get_mysqli_connection();
 
-// Check the connection
-if ($conn->connect_error) {
-    echo json_encode(["success" => false, "message" => "Connection failed: " . $conn->connect_error]);
-    exit();
-}
+    $query = "SELECT id, name FROM barbers";
+    $result = $conn->query($query);
 
-// Execute the query to fetch barbers
-$query = "SELECT id, name FROM barbers"; // Ensure this query is correct
-$result = $conn->query($query);
+    if (!$result) {
+        throw new RuntimeException('Query failed: ' . $conn->error);
+    }
 
-$response = []; // Initialize response array
-
-if ($result) {
-    $response["barbers"] = []; // Initialize the barbers array
-
+    $barbers = [];
     while ($row = $result->fetch_assoc()) {
-        $response["barbers"][] = $row; // Append each barber's details
+        $barbers[] = $row;
     }
 
-    if (count($response["barbers"]) > 0) {
-        $response["success"] = true; // Set success to true if barbers exist
-    } else {
-        $response["success"] = false;
-        $response["message"] = "No barbers found in the database.";
+    echo json_encode([
+        'success' => count($barbers) > 0,
+        'barbers' => $barbers,
+        'message' => count($barbers) > 0 ? null : 'No barbers found in the database.',
+    ]);
+} catch (Throwable $exception) {
+    echo json_encode([
+        'success' => false,
+        'message' => $exception->getMessage(),
+    ]);
+} finally {
+    if (isset($conn) && $conn instanceof mysqli) {
+        $conn->close();
     }
-} else {
-    $response["success"] = false;
-    $response["message"] = "Query failed: " . $conn->error;
 }
-
-// Close the database connection
-$conn->close();
-
-// Output the JSON response
-echo json_encode($response);
-?>

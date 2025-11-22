@@ -1,24 +1,44 @@
 <?php
+declare(strict_types=1);
+
 header('Content-Type: application/json');
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-// Database connection
-$host = 'localhost';
-$dbname = 'realbarbers_db'; // Your database name
-$username = 'lorenz';       // Your database username
-$password = 'lorenz@21';    // Your database password
+require_once __DIR__ . '/config/database.php';
 
-try {
-    // Establish database connection
-    $conn = new mysqli($host, $username, $password, $dbname);
+function fetch_rating_stats(mysqli $connection): array
+{
+    $stats = [];
+    $totalResult = $connection->query("SELECT COUNT(*) AS total FROM reviews");
+    $total = (int) ($totalResult->fetch_assoc()['total'] ?? 0);
 
-    // Check connection
-    if ($conn->connect_error) {
-        throw new Exception("Connection failed: " . $conn->connect_error);
+    for ($rating = 1; $rating <= 5; $rating++) {
+        $countResult = $connection->query("SELECT COUNT(*) AS count FROM reviews WHERE rating = {$rating}");
+        $count = (int) ($countResult->fetch_assoc()['count'] ?? 0);
+        $stats[$rating] = $total > 0 ? ($count / $total) * 100 : 0;
     }
 
-    // Create table if it doesn't exist
+    return $stats;
+}
+
+function fetch_reviews(mysqli $connection): array
+{
+    $reviews = [];
+    $result = $connection->query("SELECT * FROM reviews ORDER BY created_at DESC LIMIT 10");
+
+    if (!$result) {
+        throw new RuntimeException('Error fetching reviews: ' . $connection->error);
+    }
+
+    while ($row = $result->fetch_assoc()) {
+        $reviews[] = $row;
+    }
+
+    return $reviews;
+}
+
+try {
+    $conn = get_mysqli_connection();
+
     $createTable = "CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
@@ -26,95 +46,60 @@ try {
         comment TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )";
-    
+
     if (!$conn->query($createTable)) {
-        throw new Exception("Error creating table: " . $conn->error);
+        throw new RuntimeException('Error creating table: ' . $conn->error);
     }
 
-    function getPostData($key) {
-        return isset($_POST[$key]) ? trim($_POST[$key]) : '';
-    }
-
-    // Handle POST request (new review)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $name = $conn->real_escape_string(getPostData('name'));
-        $rating = intval(getPostData('rating'));
-        $comment = $conn->real_escape_string(getPostData('comment'));
+        $name = $conn->real_escape_string(trim($_POST['name'] ?? ''));
+        $rating = (int) ($_POST['rating'] ?? 0);
+        $comment = $conn->real_escape_string(trim($_POST['comment'] ?? ''));
 
-        // Validate input
-        if (empty($name) || $rating < 1 || $rating > 5) {
-            throw new Exception("Invalid input: Name and rating (1-5) are required");
+        if ($name === '' || $rating < 1 || $rating > 5) {
+            throw new InvalidArgumentException('Invalid input: Name and rating (1-5) are required.');
         }
 
-        // Insert review
-        $sql = "INSERT INTO reviews (name, rating, comment) VALUES (?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        
+        $stmt = $conn->prepare("INSERT INTO reviews (name, rating, comment) VALUES (?, ?, ?)");
         if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
+            throw new RuntimeException('Prepare failed: ' . $conn->error);
         }
 
-        $stmt->bind_param("sis", $name, $rating, $comment);
-        
+        $stmt->bind_param('sis', $name, $rating, $comment);
         if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
+            throw new RuntimeException('Execute failed: ' . $stmt->error);
         }
 
-        // Get updated statistics
-        $stats = [];
-        $total = $conn->query("SELECT COUNT(*) as total FROM reviews")->fetch_assoc()['total'];
-        
-        for ($i = 1; $i <= 5; $i++) {
-            $ratingCount = $conn->query("SELECT COUNT(*) as count FROM reviews WHERE rating = $i")->fetch_assoc()['count'];
-            $stats[$i] = $total > 0 ? ($ratingCount / $total) * 100 : 0;
-        }
+        $stats = fetch_rating_stats($conn);
 
         echo json_encode([
             'status' => 'success',
             'message' => 'Review submitted successfully',
-            'stats' => $stats
+            'stats' => $stats,
         ]);
 
         $stmt->close();
-    }
-    // Handle GET request (fetch reviews)
-    elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'getReviews') {
-        $sql = "SELECT * FROM reviews ORDER BY created_at DESC LIMIT 10";
-        $result = $conn->query($sql);
-        
-        if (!$result) {
-            throw new Exception("Error fetching reviews: " . $conn->error);
-        }
-
-        $reviews = [];
-        while ($row = $result->fetch_assoc()) {
-            $reviews[] = $row;
-        }
-
-        // Get statistics
-        $stats = [];
-        $total = $conn->query("SELECT COUNT(*) as total FROM reviews")->fetch_assoc()['total'];
-        
-        for ($i = 1; $i <= 5; $i++) {
-            $ratingCount = $conn->query("SELECT COUNT(*) as count FROM reviews WHERE rating = $i")->fetch_assoc()['count'];
-            $stats[$i] = $total > 0 ? ($ratingCount / $total) * 100 : 0;
-        }
-
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'getReviews') {
         echo json_encode([
             'status' => 'success',
-            'reviews' => $reviews,
-            'stats' => $stats
+            'reviews' => fetch_reviews($conn),
+            'stats' => fetch_rating_stats($conn),
+        ]);
+    } else {
+        http_response_code(405);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Unsupported request method.',
         ]);
     }
-
-} catch (Exception $e) {
+} catch (Throwable $exception) {
+    http_response_code(500);
     echo json_encode([
         'status' => 'error',
-        'message' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
+        'message' => $exception->getMessage(),
     ]);
 } finally {
-    if (isset($conn)) {
+    if (isset($conn) && $conn instanceof mysqli) {
         $conn->close();
     }
 }

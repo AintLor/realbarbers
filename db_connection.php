@@ -1,18 +1,6 @@
 <?php
+declare(strict_types=1);
 
-// db_connection.php
-$host = 'localhost';
-$dbname = 'realbarbers_db'; // Your database name
-$username = 'lorenz';       // Your database username
-$password = 'lorenz@21';    // Your database password
-$port = 3306;
+require_once __DIR__ . '/config/database.php';
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $dbname, $port);
-
-// Check the connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-$conn->set_charset("utf8mb4");
-?>
+$conn = get_mysqli_connection();
