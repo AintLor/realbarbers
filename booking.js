@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', () => {
 const appointments = [];
 let barbersCache = [];
 
+function formatTime12h(time24) {
+    const [hourStr, minuteStr = '00'] = time24.split(':');
+    const hour = parseInt(hourStr, 10);
+    if (Number.isNaN(hour)) {
+        return time24;
+    }
+    const hour12 = ((hour + 11) % 12) + 1;
+    const minutes = minuteStr.padStart(2, '0');
+    const period = hour >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${period}`;
+}
+
 const bookingForm = document.getElementById("booking-form");
 if (bookingForm) {
     bookingForm.addEventListener("submit", (event) => {
@@ -76,7 +88,7 @@ function saveAppointment() {
     );
 
     if (isDoubleBooked) {
-        alert(`The selected barber is already booked on ${date} at ${time}. Please choose another time.`);
+        alert(`The selected barber is already booked on ${date} at ${formatTime12h(time)}. Please choose another time.`);
         return;
     }
 
@@ -129,7 +141,7 @@ function saveAppointment() {
                         Client: ${clientName}<br>
                         Barber: ${barberName}<br>
                         Date: ${date}<br>
-                        Time: ${time}<br>
+                        Time: ${formatTime12h(time)}<br>
                         Service: ${specialty}<br>
                         please take a screenshot and present this to the receptionist on the day of your appointment.
                     </div>
@@ -172,7 +184,7 @@ function renderAppointmentsList() {
 
         appointmentDiv.innerHTML = `
             <div class="appointment-details">
-                <span>${appointment.date} ${appointment.time} - ${appointment.specialty} with ${appointment.name} (Client: ${appointment.client_name}, Email: ${appointment.client_email}, Mobile: ${appointment.client_mobile})</span>
+                <span>${appointment.date} ${formatTime12h(appointment.time)} - ${appointment.specialty} with ${appointment.name} (Client: ${appointment.client_name}, Email: ${appointment.client_email}, Mobile: ${appointment.client_mobile})</span>
             </div>
         `;
         appointmentsList.appendChild(appointmentDiv);
@@ -250,7 +262,7 @@ function populateAvailableTimes(barberId, selectedDate) {
             availableTimes.forEach(time => {
                 const option = document.createElement('option');
                 option.value = time;
-                option.textContent = time;
+                option.textContent = formatTime12h(time);
                 timeSelect.appendChild(option);
             });
         })
