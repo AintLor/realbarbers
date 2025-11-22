@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetchBarbers();
     initializeDateHandlers();
+    initializeBookingModal();
 });
 
 const appointments = [];
@@ -16,6 +17,74 @@ function formatTime12h(time24) {
     const minutes = minuteStr.padStart(2, '0');
     const period = hour >= 12 ? 'PM' : 'AM';
     return `${hour12}:${minutes} ${period}`;
+}
+
+let bookingModalElement = null;
+
+function initializeBookingModal() {
+    bookingModalElement = document.getElementById('booking-modal');
+    if (!bookingModalElement) return;
+
+    const closeTriggers = bookingModalElement.querySelectorAll('[data-close-modal]');
+    closeTriggers.forEach(el => el.addEventListener('click', closeBookingModal));
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && bookingModalElement.classList.contains('is-open')) {
+            closeBookingModal();
+        }
+    });
+}
+
+function openBookingModal(contentHtml) {
+    if (!bookingModalElement) return false;
+    const body = document.getElementById('booking-modal-body');
+    if (!body) return false;
+
+    body.innerHTML = contentHtml;
+    bookingModalElement.classList.add('is-open');
+    bookingModalElement.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+    return true;
+}
+
+function closeBookingModal() {
+    if (!bookingModalElement) return;
+    bookingModalElement.classList.remove('is-open');
+    bookingModalElement.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+}
+
+function showBookingConfirmation({ clientName, barberName, date, time, specialty }) {
+    const formattedTime = formatTime12h(time);
+    const modalContent = `
+        <ul class="booking-modal__details">
+            <li><span>Client</span><strong>${clientName}</strong></li>
+            <li><span>Barber</span><strong>${barberName}</strong></li>
+            <li><span>Date</span><strong>${date}</strong></li>
+            <li><span>Time</span><strong>${formattedTime}</strong></li>
+            <li><span>Service</span><strong>${specialty}</strong></li>
+        </ul>
+        <p class="booking-modal__note">Please take a screenshot and present this to the receptionist on the day of your appointment.</p>
+    `;
+
+    const opened = openBookingModal(modalContent);
+    if (!opened) {
+        const confirmationMessage = document.getElementById("confirmation-message");
+        if (confirmationMessage) {
+            confirmationMessage.innerHTML = `
+                <div class="alert alert-success">
+                    Appointment booked successfully!<br>
+                    Client: ${clientName}<br>
+                    Barber: ${barberName}<br>
+                    Date: ${date}<br>
+                    Time: ${formattedTime}<br>
+                    Service: ${specialty}<br>
+                    Please take a screenshot and present this to the receptionist on the day of your appointment.
+                </div>
+            `;
+            confirmationMessage.style.display = 'block';
+        }
+    }
 }
 
 const bookingForm = document.getElementById("booking-form");
@@ -133,21 +202,7 @@ function saveAppointment() {
             renderAppointmentsList();
             resetFormFields();
 
-            const confirmationMessage = document.getElementById("confirmation-message");
-            if (confirmationMessage) {
-                confirmationMessage.innerHTML = `
-                    <div class="alert alert-success">
-                        Appointment booked successfully!<br>
-                        Client: ${clientName}<br>
-                        Barber: ${barberName}<br>
-                        Date: ${date}<br>
-                        Time: ${formatTime12h(time)}<br>
-                        Service: ${specialty}<br>
-                        please take a screenshot and present this to the receptionist on the day of your appointment.
-                    </div>
-                `;
-                confirmationMessage.style.display = 'block';
-            }
+            showBookingConfirmation({ clientName, barberName, date, time, specialty });
 
             if (messageDiv) {
                 messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;

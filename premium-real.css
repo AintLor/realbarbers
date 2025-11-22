@@ -888,6 +888,120 @@ label {
     cursor: pointer;
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
+.booking-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.booking-modal.is-open {
+    display: flex;
+}
+
+.booking-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+}
+
+.booking-modal__dialog {
+    position: relative;
+    background: #0b0b0f;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 2.2rem 2.4rem;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
+    width: min(92vw, 540px);
+    z-index: 1;
+}
+
+.booking-modal__header h3 {
+    margin: 0.4rem 0;
+    color: #fff;
+}
+
+.booking-modal__subtitle {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.booking-modal__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.booking-modal__body {
+    margin: 1.4rem 0 0.5rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.booking-modal__details {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    row-gap: 0.65rem;
+}
+
+.booking-modal__details li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.booking-modal__details span {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.booking-modal__note {
+    margin-top: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.booking-modal__close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.booking-modal__close:hover {
+    transform: scale(1.05);
+}
+
+.booking-modal__action {
+    margin-top: 1rem;
+    width: 100%;
+}
+
 @media (max-width: 900px) {
     .reservation-card {
         padding: 2.4rem 1.8rem;

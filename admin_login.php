@@ -32,83 +32,142 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $hasError = $error !== '';
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — Real Barbers</title>
+    <title>Admin Portal | REAL Barbers</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <link href="premium-real.css" rel="stylesheet">
+
     <style>
-        :root {
-            --bg: #050505;
-            --panel: #0f1115;
-            --border: rgba(255,255,255,0.08);
-            --accent: #2979FF;
-            --text: #f5f7fb;
-            --muted: #9aa4b5;
-            --danger: #ff5c5c;
-            --font-display: 'Belgrad', serif;
-            --font-body: 'Helvetica Neue', sans-serif;
-        }
-        * { box-sizing: border-box; }
+        /* Admin Login Specific Overrides */
         body {
-            margin: 0; display: grid; place-items: center; min-height: 100vh;
-            background: radial-gradient(circle at 10% 20%, rgba(41,121,255,0.12), transparent 35%),
-                        radial-gradient(circle at 90% 10%, rgba(32,201,151,0.1), transparent 30%),
-                        radial-gradient(circle at 70% 80%, rgba(255,92,92,0.08), transparent 35%),
-                        var(--bg);
-            color: var(--text);
-            font-family: var(--font-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #000;
+            overflow: hidden;
         }
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            width: min(420px, 92vw);
-            box-shadow: 0 20px 80px rgba(0,0,0,0.45);
+
+        .hero-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('img/intro-bg.jpg') no-repeat center center;
+            background-size: cover;
+            opacity: 0.2;
+            z-index: -1;
         }
-        h1 { margin: 0 0 8px; font-family: var(--font-display); letter-spacing: 0.04em; }
-        p { margin: 0 0 20px; color: var(--muted); }
-        label { display: block; margin: 12px 0 6px; font-size: 14px; }
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 12px 14px; border-radius: 10px;
-            border: 1px solid var(--border); background: rgba(255,255,255,0.02);
-            color: var(--text); font-size: 15px;
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
         }
-        button {
-            margin-top: 18px; width: 100%; background: var(--accent); color: #fff;
-            border: none; padding: 12px 14px; border-radius: 12px; font-weight: 700;
-            letter-spacing: 0.02em; cursor: pointer; box-shadow: 0 10px 30px rgba(41,121,255,0.3);
+
+        .login-card {
+            background: linear-gradient(135deg, #0a0a0a, #0f0f12);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 3rem;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+            border-radius: 4px; /* Slight edge like the gallery items */
         }
-        .error { color: var(--danger); margin-top: 12px; font-size: 14px; }
-        .logout { text-align: center; margin-top: 12px; font-size: 14px; }
-        .logout a { color: var(--muted); }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .form-error {
+            color: #ff5c5c;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        /* Override generic inputs to match index.html form-control */
+        .login-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-bottom-color: var(--accent-color);
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Admin Login</h1>
-        <p>Enter your credentials to manage bookings and reviews.</p>
-        <form method="POST" action="admin_login.php">
-            <label for="username">Username</label>
-            <input id="username" name="username" type="text" autocomplete="username" required>
+    <div class="cursor-dot"></div>
+	<div class="cursor-outline"></div>
+    
+    <div class="hero-bg"></div>
 
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <span class="brand-logo">REAL<span class="text-accent">.</span></span>
+            
+            <form method="POST" action="admin_login.php">
+                <div>
+                    <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #888;">Username</label>
+                    <input class="login-input" name="username" type="text" autocomplete="username" required>
+                </div>
 
-            <button type="submit">Sign In</button>
-            <?php if ($hasError): ?>
-                <div class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
-            <?php endif; ?>
-        </form>
+                <div>
+                    <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #888;">Password</label>
+                    <input class="login-input" name="password" type="password" autocomplete="current-password" required>
+                </div>
+
+                <button type="submit" class="btn-glow login-btn">Enter Portal</button>
+                
+                <?php if ($hasError): ?>
+                    <div class="form-error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php endif; ?>
+            </form>
+        </div>
+        
         <?php if (!empty($_SESSION['admin_authenticated'])): ?>
-            <div class="logout">
-                <a href="admin.php">Go to Dashboard</a> · <a href="admin_login.php?action=logout">Logout</a>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="admin.php" style="color: var(--accent-color); font-size: 0.9rem; letter-spacing: 1px;">ALREADY LOGGED IN &rarr;</a>
             </div>
         <?php endif; ?>
     </div>
+
+    <script>
+        // Copy-paste cursor logic from index.html for consistency
+		const cursorDot = document.querySelector('.cursor-dot');
+		const cursorOutline = document.querySelector('.cursor-outline');
+		window.addEventListener('mousemove', (e) => {
+			const posX = e.clientX;
+			const posY = e.clientY;
+			cursorDot.style.left = `${posX}px`;
+			cursorDot.style.top = `${posY}px`;
+			cursorOutline.animate({ left: `${posX}px`, top: `${posY}px` }, { duration: 500, fill: "forwards" });
+		});
+    </script>
 </body>
 </html>

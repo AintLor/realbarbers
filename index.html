@@ -283,6 +283,21 @@
   </div>
 </section>
 
+<!-- Booking Confirmation Modal -->
+<div id="booking-modal" class="booking-modal" aria-hidden="true">
+  <div class="booking-modal__backdrop" data-close-modal></div>
+  <div class="booking-modal__dialog" role="dialog" aria-labelledby="booking-modal-title" aria-modal="true">
+    <button type="button" class="booking-modal__close" aria-label="Close confirmation" data-close-modal>&times;</button>
+    <div class="booking-modal__header">
+      <span class="booking-modal__badge">Booked</span>
+      <h3 id="booking-modal-title">Appointment confirmed</h3>
+      <p class="booking-modal__subtitle">Show this to the receptionist on the day of your appointment.</p>
+    </div>
+    <div id="booking-modal-body" class="booking-modal__body"></div>
+    <button type="button" class="reservation-submit booking-modal__action" data-close-modal>OK, got it</button>
+  </div>
+</div>
+
 	<!-- Location Section (Map Only) -->
 	<section id="contact" class="location-section">
 		<div class="map-wrapper">
