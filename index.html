@@ -31,22 +31,25 @@
 
 	<!-- Navigation -->
 	<nav class="navbar" id="mainNav">
-		<a class="logo" href="#page-top">REAL<span class="text-accent">.</span></a>
-		<div class="nav-links">
-			<a class="nav-link" href="#about">About</a>
-			<a class="nav-link" href="#services">Services</a>
-			<a class="nav-link" href="#team">Team</a>
-			<a class="nav-link" href="#gallery">Gallery</a>
-			<a class="nav-link" href="#reviews">Reviews</a>
-			<a class="nav-link" href="#contact">Contact</a>
-			<a class="nav-link" href="#booking">Book</a>
+		<div class="container-fluid nav-container">
+			<a class="logo" href="#page-top">REAL<span class="text-accent">.</span></a>
+			
+			<div class="nav-links">
+				<a class="nav-link" href="#about">About</a>
+				<a class="nav-link" href="#services">Services</a>
+				<a class="nav-link" href="#team">Team</a>
+				<a class="nav-link" href="#gallery">Gallery</a>
+				<a class="nav-link" href="#reviews">Reviews</a>
+				<a class="nav-link" href="#contact">Contact</a>
+			</div>
+
+			<div class="nav-actions">
+				<a href="#booking" class="btn-glow nav-cta-desktop">Book Now</a>
+				<button class="nav-toggle" aria-expanded="false" aria-label="Toggle menu">
+					<i class="fa-solid fa-bars"></i>
+				</button>
+			</div>
 		</div>
-		<a href="#booking" class="btn-glow nav-cta-desktop">Book Now</a>
-		<button class="nav-toggle" aria-expanded="false" aria-label="Toggle menu">
-			<span></span>
-			<span></span>
-			<span></span>
-		</button>
 	</nav>
 
 	<!-- Hero Section -->
@@ -333,6 +336,7 @@
 		const cursorOutline = document.querySelector('.cursor-outline');
 		const navBar = document.querySelector('.navbar');
 		const navToggle = document.querySelector('.nav-toggle');
+		const navIcon = navToggle ? navToggle.querySelector('i') : null;
 		const navLinks = document.querySelectorAll('.nav-links a');
 
 		window.addEventListener('mousemove', (e) => {
@@ -360,11 +364,27 @@
 		const closeNav = () => {
 			navBar?.classList.remove('open');
 			if (navToggle) navToggle.setAttribute('aria-expanded', 'false');
+			// Reset icon to bars
+			if (navIcon) {
+				navIcon.classList.remove('fa-xmark');
+				navIcon.classList.add('fa-bars');
+			}
 		};
 
 		navToggle?.addEventListener('click', () => {
 			const isOpen = navBar?.classList.toggle('open');
 			if (navToggle) navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+			// Toggle Icon
+			if (navIcon) {
+				if (isOpen) {
+					navIcon.classList.remove('fa-bars');
+					navIcon.classList.add('fa-xmark');
+				} else {
+					navIcon.classList.remove('fa-xmark');
+					navIcon.classList.add('fa-bars');
+				}
+			}
 		});
 
 		navLinks.forEach(link => link.addEventListener('click', closeNav));
