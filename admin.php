@@ -262,7 +262,9 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                             <th>Barber</th>
                             <th>Service</th>
                             <th>Client Info</th>
+                            <th>Status</th>
                             <th>Created</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="bookingsBody">
@@ -414,12 +416,17 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                             <small>${b.client_mobile || ''}</small>
                         </div>
                     </td>
+                    <td>${bookingStatusBadge(b.status)}</td>
                     <td style="opacity:0.5; font-size:0.8rem;">${formatDateTime(b.created_at || b.date, null)}</td>
+                    <td>
+                        <button class="action-btn" data-booking-id="${b.id}" ${b.status === 'completed' ? 'disabled' : ''}>Mark as done</button>
+                    </td>
                 `;
                 bookingsBody.appendChild(row);
             });
 
             updatePager(bookingsPageInfo, bookingsPrev, bookingsNext, bookingState.page, totalPages, total);
+            wireBookingActions();
         }
 
         async function loadReviews() {
@@ -525,6 +532,40 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         handlePerPageChange(reviewsPerPageSelect, reviewState, renderReviews);
         wirePager(bookingsPrev, bookingsNext, bookingState, renderBookings);
         wirePager(reviewsPrev, reviewsNext, reviewState, renderReviews);
+
+        function bookingStatusBadge(status) {
+            if (status === 'completed') return '<span class="status-badge ok">Completed</span>';
+            if (status === 'confirmed') return '<span class="status-badge ok" style="border-color:#4dabf7;color:#4dabf7;background:rgba(77,171,247,0.08);">Confirmed</span>';
+            if (status === 'canceled') return '<span class="status-badge danger">Canceled</span>';
+            return '<span class="status-badge" style="border-color:#aaa; color:#aaa; background:rgba(255,255,255,0.05);">Pending</span>';
+        }
+
+        function wireBookingActions() {
+            bookingsBody.querySelectorAll('button[data-booking-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = Number(btn.dataset.bookingId);
+                    if (!id) return;
+                    markBookingDone(id);
+                });
+            });
+        }
+
+        async function markBookingDone(id) {
+            setStatus(bookingStatus, 'Updating booking...');
+            try {
+                const res = await fetch('admin_update_booking.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status: 'completed' })
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Failed to update booking');
+                await loadBookings();
+            } catch (error) {
+                console.error(error);
+                alert('Error updating booking status.');
+            }
+        }
         
         loadBookings();
         loadReviews();
