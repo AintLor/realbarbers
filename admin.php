@@ -612,7 +612,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 setStatus(bookingStatus, `Last synced: ${new Date().toLocaleTimeString()}`);
             } catch (error) {
                 console.error(error);
-                bookingsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ff5c5c;">Error: ${error.message}</td></tr>`;
+                bookingsBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ff5c5c;">Error: ${error.message}</td></tr>`;
             }
         }
 
@@ -631,7 +631,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
             bookingsBody.innerHTML = '';
             if (!pageItems.length) {
-                bookingsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No bookings found.</td></tr>';
+                bookingsBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No bookings found.</td></tr>';
                 updatePager(bookingsPageInfo, bookingsPrev, bookingsNext, bookingState.page, totalPages, total);
                 return;
             }
