@@ -650,10 +650,11 @@ a {
     padding: 1.9rem 2rem;
     background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
+    border-radius: 18px;
     color: #fff;
     opacity: 0.8;
-    transform: scale(0.95);
+    --card-scale: 0.95;
+    transform: scale(var(--card-scale));
     transition: transform 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     max-width: 520px;
@@ -661,7 +662,8 @@ a {
 }
 
 .recent-review-card.is-center {
-    transform: scale(1.08);
+    --card-scale: 1.08;
+    transform: scale(var(--card-scale));
     opacity: 1;
     box-shadow: 0 25px 70px rgba(0,0,0,0.45);
 }
@@ -714,6 +716,21 @@ a {
 
 .recent-nav {
     display: none;
+}
+
+.recent-track.shuffle .recent-review-card {
+    animation: cardShuffle 0.35s ease;
+}
+
+@keyframes cardShuffle {
+    0% {
+        transform: translateY(16px) scale(calc(var(--card-scale) - 0.08));
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0) scale(var(--card-scale));
+        opacity: 1;
+    }
 }
 
 /* --- BOOKING & CONTACT --- */

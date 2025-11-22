@@ -237,6 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const track = recentReviewsContainer.querySelector('.recent-track');
         const len = recentReviewsData.length;
+        track.classList.add('shuffle');
+        setTimeout(() => track.classList.remove('shuffle'), 380);
 
         const buildCard = (review, role, idx) => {
             const date = review.created_at ? new Date(review.created_at).toLocaleDateString() : '';
