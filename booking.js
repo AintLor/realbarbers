@@ -53,14 +53,53 @@ function openBookingModal(contentHtml) {
     bookingModalElement.classList.add('is-open');
     bookingModalElement.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+    enforceBookingModalDelay();
     return true;
 }
 
 function closeBookingModal() {
     if (!bookingModalElement) return;
+    if (bookingModalElement.dataset.locked === 'true') {
+        return;
+    }
     bookingModalElement.classList.remove('is-open');
     bookingModalElement.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
+}
+
+function enforceBookingModalDelay() {
+    if (!bookingModalElement) return;
+    bookingModalElement.dataset.locked = 'true';
+    const closeBtn = bookingModalElement.querySelector('.booking-modal__close');
+    const okBtn = bookingModalElement.querySelector('.booking-modal__action');
+    let remaining = 5;
+
+    const updateLabel = () => {
+        if (okBtn) okBtn.textContent = `OK, got it (${remaining}s)`;
+    };
+
+    [closeBtn, okBtn].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.classList.add('is-disabled');
+    });
+    updateLabel();
+
+    const interval = setInterval(() => {
+        remaining -= 1;
+        updateLabel();
+    }, 1000);
+
+    setTimeout(() => {
+        clearInterval(interval);
+        bookingModalElement.dataset.locked = 'false';
+        [closeBtn, okBtn].forEach(btn => {
+            if (!btn) return;
+            btn.disabled = false;
+            btn.classList.remove('is-disabled');
+        });
+        if (okBtn) okBtn.textContent = 'OK, got it';
+    }, 5000);
 }
 
 function showBookingConfirmation({ clientName, barberName, date, time, specialty }) {

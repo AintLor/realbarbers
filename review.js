@@ -140,6 +140,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(reviewForm);
 
+            // Close the review popup before showing captcha modal
+            closeReviewPopup();
+
             requestCaptcha('review')
             .then((captchaAnswer) => {
                 formData.append('captcha_answer', captchaAnswer);

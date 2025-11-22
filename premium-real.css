@@ -1163,6 +1163,12 @@ body.modal-open {
     width: 100%;
 }
 
+.booking-modal__close.is-disabled,
+.booking-modal__action.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
     .reservation-card {
         padding: 2.4rem 1.8rem;
