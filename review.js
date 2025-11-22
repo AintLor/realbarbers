@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let reviews = [];
     let isFullReviewsVisible = false;
     const recentReviewsContainer = document.getElementById('recent-reviews');
+    let recentReviewsData = [];
+    let recentIndex = 0;
 
     function setStatus(message, type = '') {
         if (!reviewStatus) return;
@@ -219,27 +221,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderRecentReviews() {
         if (!recentReviewsContainer) return;
-        recentReviewsContainer.innerHTML = '';
-        const latest = (reviews || []).slice(0, 5);
-        if (!latest.length) {
+        recentReviewsData = (reviews || []).slice(0, 3);
+        if (!recentReviewsData.length) {
             recentReviewsContainer.style.display = 'none';
             return;
         }
-        recentReviewsContainer.style.display = 'grid';
-        latest.forEach(review => {
-            const card = document.createElement('div');
-            card.className = 'recent-review-card';
+        recentReviewsContainer.style.display = 'block';
+        recentIndex = Math.min(recentIndex, recentReviewsData.length - 1);
+
+        recentReviewsContainer.innerHTML = `
+            <div class="recent-carousel">
+                <div class="recent-track"></div>
+            </div>
+        `;
+
+        const track = recentReviewsContainer.querySelector('.recent-track');
+        const len = recentReviewsData.length;
+
+        const buildCard = (review, role) => {
             const date = review.created_at ? new Date(review.created_at).toLocaleDateString() : '';
+            const card = document.createElement('div');
+            card.className = `recent-review-card ${role}`;
+            const rawComment = review.comment && review.comment.trim() ? review.comment.trim() : 'Great experience, highly recommended.';
+            const comment = rawComment.length > 150 ? `${rawComment.slice(0, 150)}…` : rawComment;
+            const author = review.name || 'Guest';
+            const roleLabel = 'Verified Client';
             card.innerHTML = `
-                <div class="recent-review-top">
-                    <div class="recent-review-name">${review.name || 'Guest'}</div>
-                    <div class="recent-review-date">${date}</div>
-                </div>
+                <p class="recent-review-comment">&ldquo;${comment}&rdquo;</p>
                 <div class="recent-review-stars">${'★'.repeat(review.rating || 0)}${'☆'.repeat(Math.max(0, 5 - (review.rating || 0)))}</div>
-                ${review.comment ? `<p class="recent-review-comment">${review.comment}</p>` : ''}
+                <div class="recent-review-author">${author.toUpperCase()}</div>
+                <div class="recent-review-role">${roleLabel}${date ? ` · ${date}` : ''}</div>
             `;
-            recentReviewsContainer.appendChild(card);
+            return card;
+        };
+
+        const visible = [];
+        if (len === 1) {
+            visible.push({ idx: recentIndex, role: 'is-center' });
+        } else if (len === 2) {
+            visible.push({ idx: recentIndex, role: 'is-center' });
+            visible.push({ idx: (recentIndex + 1) % len, role: 'is-right' });
+        } else {
+            visible.push({ idx: (recentIndex - 1 + len) % len, role: 'is-left' });
+            visible.push({ idx: recentIndex, role: 'is-center' });
+            visible.push({ idx: (recentIndex + 1) % len, role: 'is-right' });
+        }
+
+        visible.forEach(item => {
+            track.appendChild(buildCard(recentReviewsData[item.idx], item.role));
         });
+
+        // Swipe / scrollable experience: allow wheel/drag to update active
+        let startX = null;
+        track.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        });
+        track.addEventListener('touchmove', (e) => {
+            if (startX === null) return;
+            const delta = e.touches[0].clientX - startX;
+            if (Math.abs(delta) > 40) {
+                recentIndex = delta > 0 ? (recentIndex - 1 + len) % len : (recentIndex + 1) % len;
+                startX = null;
+                renderRecentReviews();
+            }
+        });
+        track.addEventListener('touchend', () => { startX = null; });
+        track.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return;
+            e.preventDefault();
+            recentIndex = e.deltaX > 0 ? (recentIndex + 1) % len : (recentIndex - 1 + len) % len;
+            renderRecentReviews();
+        }, { passive: false });
     }
 
     // Sorting functionality with dropdown
