@@ -419,7 +419,9 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                     <td>${bookingStatusBadge(b.status)}</td>
                     <td style="opacity:0.5; font-size:0.8rem;">${formatDateTime(b.created_at || b.date, null)}</td>
                     <td>
-                        <button class="action-btn" data-booking-id="${b.id}" ${b.status === 'completed' ? 'disabled' : ''}>Mark as done</button>
+                        <button class="action-btn" data-booking-id="${b.id}" data-status="${b.status === 'completed' ? 'pending' : 'completed'}">
+                            ${b.status === 'completed' ? 'Undo done' : 'Mark as done'}
+                        </button>
                     </td>
                 `;
                 bookingsBody.appendChild(row);
@@ -544,19 +546,20 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             bookingsBody.querySelectorAll('button[data-booking-id]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = Number(btn.dataset.bookingId);
+                    const status = btn.dataset.status || 'completed';
                     if (!id) return;
-                    markBookingDone(id);
+                    updateBookingStatus(id, status);
                 });
             });
         }
 
-        async function markBookingDone(id) {
+        async function updateBookingStatus(id, status) {
             setStatus(bookingStatus, 'Updating booking...');
             try {
                 const res = await fetch('admin_update_booking.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, status: 'completed' })
+                    body: JSON.stringify({ id, status })
                 });
                 const data = await res.json();
                 if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Failed to update booking');
