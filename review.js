@@ -245,12 +245,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const rawComment = review.comment && review.comment.trim() ? review.comment.trim() : 'Great experience, highly recommended.';
             const comment = rawComment.length > 150 ? `${rawComment.slice(0, 150)}…` : rawComment;
             const author = review.name || 'Guest';
-            const roleLabel = 'Verified Client';
             card.innerHTML = `
                 <p class="recent-review-comment">&ldquo;${comment}&rdquo;</p>
                 <div class="recent-review-stars">${'★'.repeat(review.rating || 0)}${'☆'.repeat(Math.max(0, 5 - (review.rating || 0)))}</div>
                 <div class="recent-review-author">${author.toUpperCase()}</div>
-                <div class="recent-review-role">${roleLabel}${date ? ` · ${date}` : ''}</div>
+                ${date ? `<div class="recent-review-role">${date}</div>` : ''}
             `;
             return card;
         };
