@@ -61,8 +61,8 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
         .premium-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 1rem; /* Creates gap between rows */
+            border-collapse: collapse;
+            border-spacing: 0;
             min-width: 800px;
         }
 
@@ -78,13 +78,17 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
         .premium-table tbody tr {
             background: #0f1012;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .premium-table tbody tr:nth-child(even) {
+            background: #0c0c10;
         }
 
         .premium-table tbody tr:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            background: #141518;
+            background: #16171b;
         }
 
         .premium-table td {
@@ -327,7 +331,6 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
     <nav class="admin-nav">
         <a href="index.html" class="logo">REAL<span class="text-accent">.</span></a>
         <div>
-            <span class="user-chip">Logged in as <?php echo htmlspecialchars($adminName); ?></span>
             <a href="admin_login.php?action=logout" class="btn-glow" style="padding: 0.8rem 2rem; font-size: 0.8rem;">Logout</a>
         </div>
     </nav>
@@ -357,6 +360,14 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                             <option value="100">100</option>
                         </select>
                         <span style="color:var(--text-secondary); font-size:0.85rem;">per page</span>
+                    </div>
+                    <div>
+                        <label for="bookingStatusFilter" style="color:var(--text-secondary); font-size:0.85rem; margin-right:0.4rem;">Status</label>
+                        <select id="bookingStatusFilter">
+                            <option value="all" selected>All</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Done</option>
+                        </select>
                     </div>
                     <div class="pager">
                         <button id="bookingsPrev">&laquo; Prev</button>
@@ -520,6 +531,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         const bookingsNext = document.getElementById('bookingsNext');
         const reviewsPrev = document.getElementById('reviewsPrev');
         const reviewsNext = document.getElementById('reviewsNext');
+        const bookingStatusFilter = document.getElementById('bookingStatusFilter');
 
         const bookingState = { data: [], page: 1, perPage: 20 };
         const reviewState = { data: [], page: 1, perPage: 20 };
@@ -605,12 +617,17 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         }
 
         function renderBookings() {
-            const total = bookingState.data.length;
+            const statusFilter = bookingStatusFilter?.value || 'all';
+            const filtered = bookingState.data.filter(b => {
+                if (statusFilter === 'all') return true;
+                return (b.status || 'pending') === statusFilter;
+            });
+            const total = filtered.length;
             const perPage = bookingState.perPage;
             const totalPages = Math.max(1, Math.ceil(total / perPage));
             bookingState.page = Math.min(Math.max(1, bookingState.page), totalPages);
             const start = (bookingState.page - 1) * perPage;
-            const pageItems = bookingState.data.slice(start, start + perPage);
+            const pageItems = filtered.slice(start, start + perPage);
 
             bookingsBody.innerHTML = '';
             if (!pageItems.length) {
@@ -906,6 +923,10 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         handlePerPageChange(reviewsPerPageSelect, reviewState, renderReviews);
         wirePager(bookingsPrev, bookingsNext, bookingState, renderBookings);
         wirePager(reviewsPrev, reviewsNext, reviewState, renderReviews);
+        bookingStatusFilter?.addEventListener('change', () => {
+            bookingState.page = 1;
+            renderBookings();
+        });
         refreshBarbersBtn?.addEventListener('click', loadBarbers);
         barberForm?.addEventListener('submit', saveBarber);
         resetBarberFormBtn?.addEventListener('click', resetBarberForm);
@@ -918,9 +939,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         });
 
         function bookingStatusBadge(status) {
-            if (status === 'completed') return '<span class="status-badge ok">Completed</span>';
-            if (status === 'confirmed') return '<span class="status-badge ok" style="border-color:#4dabf7;color:#4dabf7;background:rgba(77,171,247,0.08);">Confirmed</span>';
-            if (status === 'canceled') return '<span class="status-badge danger">Canceled</span>';
+            if (status === 'completed') return '<span class="status-badge ok">Done</span>';
             return '<span class="status-badge" style="border-color:#aaa; color:#aaa; background:rgba(255,255,255,0.05);">Pending</span>';
         }
 
