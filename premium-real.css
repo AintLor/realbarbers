@@ -665,6 +665,16 @@ label {
     gap: 1rem;
 }
 
+/* Make the date picker icon pop on the dark background */
+.reservation-section input[type="date"] {
+    color-scheme: dark;
+}
+
+.reservation-section input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.9;
+}
+
 @media (max-width: 768px) {
     .reservation-grid {
         grid-template-columns: 1fr;
@@ -835,6 +845,12 @@ label {
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(10px);
+}
+
+/* Lock background scroll when a popup is active */
+html.no-scroll,
+body.no-scroll {
+    overflow: hidden;
 }
 
 .popup-content {

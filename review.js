@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeReviewBtn = document.getElementById('closeReview');
     const reviewPopup = document.getElementById('reviewPopup');
     const reviewForm = document.getElementById('reviewForm');
+    const root = document.documentElement;
+    const body = document.body;
     const nameInput = document.getElementById('name');
     const ratingInput = document.getElementById('rating');
     const nameError = document.getElementById('nameError');
@@ -41,6 +43,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function lockScroll() {
+        root.classList.add('no-scroll');
+        body.classList.add('no-scroll');
+    }
+
+    function unlockScroll() {
+        root.classList.remove('no-scroll');
+        body.classList.remove('no-scroll');
+    }
+
+    function openReviewPopup() {
+        if (!reviewPopup) return;
+        reviewPopup.style.display = 'flex';
+        lockScroll();
+        const current = ratingInput ? parseInt(ratingInput.value || '0', 10) : 0;
+        updateStars(current);
+    }
+
+    function closeReviewPopup() {
+        if (!reviewPopup) return;
+        reviewPopup.style.display = 'none';
+        unlockScroll();
+    }
+
     stars.forEach((star) => {
         const starValue = parseInt(star.dataset.rating, 10);
         star.addEventListener('mouseenter', () => updateStars(starValue));
@@ -61,27 +87,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (leaveReviewBtn && reviewPopup) {
         leaveReviewBtn.addEventListener('click', function() {
-            reviewPopup.style.display = 'flex';
-            const current = ratingInput ? parseInt(ratingInput.value || '0', 10) : 0;
-            updateStars(current);
+            openReviewPopup();
         });
     }
 
     if (closeReviewBtn && reviewPopup) {
         closeReviewBtn.addEventListener('click', function() {
-            reviewPopup.style.display = 'none';
+            closeReviewPopup();
         });
     }
 
     if (reviewPopup) {
         reviewPopup.addEventListener('click', function(e) {
             if (e.target === reviewPopup) {
-                reviewPopup.style.display = 'none';
+                closeReviewPopup();
             }
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && reviewPopup.style.display !== 'none') {
-                reviewPopup.style.display = 'none';
+            if (e.key === 'Escape' && reviewPopup.style.display === 'flex') {
+                closeReviewPopup();
             }
         });
     }
@@ -133,9 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         updateStars(0);
 
                         setTimeout(() => {
-                            if (reviewPopup) {
-                                reviewPopup.style.display = 'none';
-                            }
+                            closeReviewPopup();
                             setStatus('', '');
                         }, 2000);
 
