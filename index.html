@@ -35,6 +35,7 @@
 		<div class="nav-links">
 			<a class="nav-link" href="#about">About</a>
 			<a class="nav-link" href="#services">Services</a>
+			<a class="nav-link" href="#gallery">Gallery</a>
 			<a class="nav-link" href="#team">Team</a>
 			<a class="nav-link" href="#reviews">Reviews</a>
 			<a class="nav-link" href="#contact">Contact</a>
@@ -111,6 +112,22 @@
 		</div>
 	</section>
 
+	<!-- Gallery Section -->
+	<section id="gallery" class="gallery-section section-padding">
+		<div class="container-fluid">
+			<span class="section-label">03 / Gallery</span>
+			<h2 class="big-heading mb-5">Inside the Shop</h2>
+			<div id="lightgallery" class="gallery-grid">
+				<a href="gallery/g1.jpg" class="gallery-item"><img src="gallery/g1.jpg" alt="Barbershop interior 1"></a>
+				<a href="gallery/g2.jpg" class="gallery-item"><img src="gallery/g2.jpg" alt="Barbershop interior 2"></a>
+				<a href="gallery/g3.jpg" class="gallery-item"><img src="gallery/g3.jpg" alt="Barber working with client"></a>
+				<a href="gallery/g4.jpg" class="gallery-item"><img src="gallery/g4.jpg" alt="Haircut tools setup"></a>
+				<a href="gallery/g5.jpg" class="gallery-item"><img src="gallery/g5.jpg" alt="Barber chair detail"></a>
+				<a href="gallery/g6.jpg" class="gallery-item"><img src="gallery/g6.jpg" alt="Shop ambience lighting"></a>
+			</div>
+		</div>
+	</section>
+
 	<!-- Team Section (Grid) -->
 	<section id="team" class="team-section">
 		<div class="team-grid">
@@ -141,7 +158,7 @@
 	<!-- Reviews Section -->
 	<section id="reviews" class="reviews-section section-padding">
 		<div class="container-fluid">
-			<span class="section-label">03 / Reputation</span>
+			<span class="section-label">04 / Reputation</span>
 			<h2 class="big-heading mb-5">Client Love</h2>
 
 			<div class="review-stats">
@@ -199,7 +216,7 @@
 	<section id="booking" class="reservation-section">
 		<div class="reservation-container">
 			<div class="text-center mb-5">
-				<span class="section-label">04 / Secure Your Spot</span>
+				<span class="section-label">05 / Secure Your Spot</span>
 				<h2 class="big-heading">Reservation</h2>
 			</div>
 
@@ -301,6 +318,7 @@
 	<!-- Scripts -->
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="vendor/lightbox/lightgallery.min.js"></script>
 
 	<!-- Custom JS for Cursor & Parallax -->
 	<script>
@@ -346,6 +364,18 @@
 
 		$('#closeReview').click(function () {
 			$('#reviewPopup').hide();
+		});
+
+		// Gallery lightbox
+		document.addEventListener('DOMContentLoaded', () => {
+			const galleryEl = document.getElementById('lightgallery');
+			if (galleryEl && window.lightGallery) {
+				lightGallery(galleryEl, {
+					selector: 'a',
+					download: false,
+					thumbnail: false
+				});
+			}
 		});
 	</script>
 
