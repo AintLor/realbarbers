@@ -7,6 +7,8 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/schema.php';
 require_once __DIR__ . '/auth.php';
 
+session_start();
+
 function fetch_rating_stats(mysqli $connection, bool $includeHidden = false): array
 {
     $visibilityCondition = $includeHidden ? '' : 'hidden = 0';
@@ -100,10 +102,17 @@ try {
         $email = trim($_POST['email'] ?? '');
         $reservationId = isset($_POST['reservation_id']) ? (int) $_POST['reservation_id'] : null;
         $userId = null;
+        $captchaAnswer = trim((string) ($_POST['captcha_answer'] ?? ''));
 
         if ($name === '' || $rating < 1 || $rating > 5) {
             throw new InvalidArgumentException('Invalid input: Name and rating (1-5) are required.');
         }
+
+        $expectedCaptcha = $_SESSION['captcha']['review'] ?? null;
+        if ($expectedCaptcha === null || (string) $expectedCaptcha !== $captchaAnswer) {
+            throw new InvalidArgumentException('Captcha validation failed.');
+        }
+        unset($_SESSION['captcha']['review']);
 
         if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Fetch or create user for linkage

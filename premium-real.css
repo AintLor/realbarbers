@@ -718,6 +718,57 @@ a {
     display: none;
 }
 
+.admin-modal#captcha-modal {
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-modal#captcha-modal.is-open {
+    display: flex;
+}
+
+#captcha-modal .admin-modal__dialog {
+    max-width: 420px;
+}
+
+.admin-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1600;
+}
+
+.admin-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+}
+
+.admin-modal__dialog {
+    position: relative;
+    background: #0f1012;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 1.4rem;
+    width: min(90vw, 520px);
+    z-index: 1;
+}
+
+.admin-modal__close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
 .recent-track.shuffle .recent-review-card {
     animation: cardShuffle 0.35s ease;
 }

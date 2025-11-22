@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config/env.php';
 
+session_start();
+
 header('Content-Type: application/json');
 
 set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
@@ -29,7 +31,7 @@ try {
 
     $data = json_decode($rawData, true, 512, JSON_THROW_ON_ERROR);
 
-    $requiredFields = ['client_name', 'client_email', 'client_mobile', 'specialty', 'name', 'date', 'time'];
+    $requiredFields = ['client_name', 'client_email', 'client_mobile', 'specialty', 'name', 'date', 'time', 'captcha_answer'];
     $missingFields = array_filter($requiredFields, static fn($field) => empty($data[$field]));
     if (!empty($missingFields)) {
         throw new InvalidArgumentException("Missing required fields: " . implode(', ', $missingFields));
@@ -43,6 +45,7 @@ try {
     $clientName = substr(htmlspecialchars(trim($data['client_name'])), 0, 255);
     $clientEmail = substr(htmlspecialchars(trim($data['client_email'])), 0, 255);
     $clientPhone = substr(htmlspecialchars(trim($data['client_mobile'])), 0, 15);
+    $captchaAnswer = trim((string) $data['captcha_answer']);
 
     if ($date === false || $time === false) {
         throw new InvalidArgumentException("Invalid date or time format");
@@ -52,6 +55,11 @@ try {
         throw new InvalidArgumentException("Invalid email format.");
     }
 
+    $expectedCaptcha = $_SESSION['captcha']['booking'] ?? null;
+    if ($expectedCaptcha === null || (string) $expectedCaptcha !== $captchaAnswer) {
+        throw new InvalidArgumentException("Captcha validation failed.");
+    }
+    unset($_SESSION['captcha']['booking']);
 
     $appointmentData = [
         'name' => $barberName,

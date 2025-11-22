@@ -263,23 +263,23 @@
                 <option value="">Select Barber</option>
               </select>
             </div>
-            <div class="inline-pair">
-              <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" id="date" name="appointment_date" class="form-control" required>
-              </div>
-              <div class="form-group">
-                <label for="time">Time</label>
-                <select id="time" name="appointment_time" class="form-control" required>
-                  <option value="">Select Time</option>
-                </select>
+                <div class="inline-pair">
+                  <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="appointment_date" class="form-control" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="time">Time</label>
+                    <select id="time" name="appointment_time" class="form-control" required>
+                      <option value="">Select Time</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-        <button type="submit" id="submit-btn" class="reservation-submit">Confirm Booking</button>
-        <p class="reservation-footnote">No walk-ins. Screenshot the confirmation for the front desk.</p>
-        <div id="confirmation-message" class="mt-3 text-center"></div>
+            <button type="submit" id="submit-btn" class="reservation-submit">Confirm Booking</button>
+            <p class="reservation-footnote">No walk-ins. Screenshot the confirmation for the front desk.</p>
+            <div id="confirmation-message" class="mt-3 text-center"></div>
       </form>
     </div>
   </div>
@@ -452,6 +452,21 @@
 	<script src="js/form-scripts.js"></script>
 	<script src="review.js"></script>
 	<script src="booking.js"></script>
+
+    <!-- Captcha Modal -->
+    <div id="captcha-modal" class="admin-modal" aria-hidden="true">
+        <div class="admin-modal__backdrop" data-captcha-close></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="captcha-title">
+            <button class="admin-modal__close" type="button" data-captcha-close>&times;</button>
+            <h3 id="captcha-title" style="margin-top:0;">Verify</h3>
+            <p id="captcha-question" style="color: var(--text-secondary); margin-bottom: 0.6rem;"></p>
+            <input type="text" id="captcha-answer" class="form-control" placeholder="Enter answer" style="margin-bottom:1rem;">
+            <div style="display:flex; gap:0.5rem;">
+                <button type="button" id="captcha-submit" class="btn-glow" style="flex:1;">Submit</button>
+                <button type="button" data-captcha-close class="btn-ghost" style="flex:1;">Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -140,9 +140,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(reviewForm);
 
-            fetch('review.php', {
-                method: 'POST',
-                body: formData
+            requestCaptcha('review')
+            .then((captchaAnswer) => {
+                formData.append('captcha_answer', captchaAnswer);
+                return fetch('review.php', {
+                    method: 'POST',
+                    body: formData
+                });
             })
                 .then(response => response.json())
                 .then(data => {
@@ -171,7 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    setStatus('An error occurred. Please try again.', 'error');
+                    if (error?.message !== 'Captcha cancelled') {
+                        setStatus('An error occurred. Please try again.', 'error');
+                    }
                 });
         });
     }
@@ -300,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderRecentReviews();
         }, { passive: false });
     }
+
 
     // Sorting functionality with dropdown
     if (sortDropdown) {

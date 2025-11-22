@@ -2,10 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchBarbers();
     initializeDateHandlers();
     initializeBookingModal();
+    initializeCaptchaModal();
 });
 
 const appointments = [];
 let barbersCache = [];
+let captchaModal = null;
+let captchaQuestionEl = null;
+let captchaAnswerInput = null;
+let captchaSubmitBtn = null;
+let captchaCloseEls = [];
+let captchaResolve = null;
+let captchaReject = null;
+let captchaForm = null;
 
 function formatTime12h(time24) {
     const [hourStr, minuteStr = '00'] = time24.split(':');
@@ -174,10 +183,14 @@ function saveAppointment() {
         client_mobile: clientMobile
     };
 
-    fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+    requestCaptcha('booking')
+    .then(captchaAnswer => {
+        requestBody.captcha_answer = captchaAnswer;
+        return fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
     })
     .then(async response => {
         const contentType = response.headers.get("content-type");
@@ -218,6 +231,10 @@ function saveAppointment() {
     .catch(error => {
         console.error('Error:', error);
         const messageDiv = document.getElementById("response-message");
+        if (error?.message === 'Captcha cancelled') {
+            // user cancelled; no alert
+            return;
+        }
         if (messageDiv) {
             messageDiv.innerHTML = `<div class="alert alert-danger">An error occurred while submitting the form.</div>`;
         } else {
@@ -351,4 +368,80 @@ function initializeDateHandlers() {
             populateAvailableTimes(barberSelect.value, dateInput.value);
         }
     });
+}
+
+function initializeCaptchaModal() {
+    captchaModal = document.getElementById('captcha-modal');
+    captchaQuestionEl = document.getElementById('captcha-question');
+    captchaAnswerInput = document.getElementById('captcha-answer');
+    captchaSubmitBtn = document.getElementById('captcha-submit');
+    captchaCloseEls = Array.from(document.querySelectorAll('[data-captcha-close]'));
+
+    captchaCloseEls.forEach(el => el.addEventListener('click', cancelCaptchaModal));
+    captchaSubmitBtn?.addEventListener('click', submitCaptchaModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && captchaModal?.classList.contains('is-open')) {
+            cancelCaptchaModal();
+        }
+    });
+}
+
+function requestCaptcha(form) {
+    return new Promise((resolve, reject) => {
+        captchaForm = form;
+        captchaResolve = resolve;
+        captchaReject = reject;
+        fetch(`captcha.php?form=${encodeURIComponent(form)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (captchaQuestionEl) {
+                    captchaQuestionEl.textContent = data.question || 'Solve to continue';
+                }
+                if (captchaAnswerInput) {
+                    captchaAnswerInput.value = '';
+                    captchaAnswerInput.focus();
+                }
+                openCaptchaModal();
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
+}
+
+function openCaptchaModal() {
+    if (!captchaModal) return;
+    captchaModal.classList.add('is-open');
+    captchaModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCaptchaModal() {
+    if (!captchaModal) return;
+    captchaModal.classList.remove('is-open');
+    captchaModal.setAttribute('aria-hidden', 'true');
+    captchaForm = null;
+    captchaResolve = null;
+    captchaReject = null;
+}
+
+function cancelCaptchaModal() {
+    if (captchaReject) {
+        captchaReject(new Error('Captcha cancelled'));
+    }
+    closeCaptchaModal();
+}
+
+function submitCaptchaModal() {
+    if (!captchaResolve || !captchaAnswerInput) {
+        closeCaptchaModal();
+        return;
+    }
+    const answer = captchaAnswerInput.value.trim();
+    if (!answer) {
+        captchaAnswerInput.focus();
+        return;
+    }
+    const resolver = captchaResolve;
+    closeCaptchaModal();
+    resolver(answer);
 }
