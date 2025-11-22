@@ -208,6 +208,92 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             font-size: 0.9rem;
         }
 
+        .barber-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: #0f1012;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-row input[type="text"],
+        .form-row input[type="email"],
+        .form-row input[type="tel"] {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #0b0b0f;
+            color: #fff;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            background: rgba(255,255,255,0.08);
+            border-radius: 999px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        .availability-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .availability-grid label {
+            margin-bottom: 0.25rem;
+        }
+
+        .availability-grid input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #0b0b0f;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .barber-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .btn-ghost {
+            border: 1px solid rgba(255,255,255,0.25);
+            background: transparent;
+            color: #fff;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -322,6 +408,75 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             </div>
         </section>
 
+        <section>
+            <div class="header-row">
+                <div>
+                    <span class="section-label">03 / Team</span>
+                    <h2 class="big-heading" style="font-size: 2.5rem; margin-bottom: 0;">Barbers</h2>
+                </div>
+                <div>
+                    <span id="barberStatus" style="font-size: 0.8rem; color: #888;"></span>
+                    <button id="refreshBarbers" class="refresh-btn"><i class="fa fa-sync"></i> Refresh</button>
+                </div>
+            </div>
+
+            <div class="barber-grid">
+                <div class="card">
+                    <h3 id="barberFormTitle">Add Barber</h3>
+                    <form id="barberForm">
+                        <input type="hidden" id="barberId">
+                        <div class="form-row">
+                            <div>
+                                <label for="barberName">Name</label>
+                                <input type="text" id="barberName" required placeholder="Barber Name">
+                            </div>
+                            <div>
+                                <label for="barberSpecialty">Specialty</label>
+                                <input type="text" id="barberSpecialty" placeholder="Fade, Beard, etc.">
+                            </div>
+                        </div>
+                        <div style="margin-top:0.6rem;">
+                            <label style="display:flex; align-items:center; gap:0.5rem;">
+                                <input type="checkbox" id="barberActive" checked>
+                                <span style="color:#fff;">Active</span>
+                            </label>
+                        </div>
+
+                        <div class="availability-grid">
+                            <?php foreach (['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as $day): ?>
+                            <div>
+                                <label for="avail-<?php echo strtolower($day); ?>"><?php echo $day; ?></label>
+                                <input type="text" id="avail-<?php echo strtolower($day); ?>" placeholder="09:00,10:00,11:00">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+                            <button type="submit" class="btn-glow" style="padding:0.8rem 1.6rem;">Save Barber</button>
+                            <button type="button" id="resetBarberForm" class="btn-ghost">Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-container card" style="overflow: auto;">
+                    <table class="premium-table" style="min-width: 640px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Specialty</th>
+                                <th>Availability</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="barbersBody">
+                            <tr><td colspan="5" style="text-align:center; color: #555;">Loading barbers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </div>
 
     <script>
@@ -340,6 +495,19 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
         const bookingState = { data: [], page: 1, perPage: 20 };
         const reviewState = { data: [], page: 1, perPage: 20 };
+        const barberState = { data: [] };
+
+        const barberStatus = document.getElementById('barberStatus');
+        const barbersBody = document.getElementById('barbersBody');
+        const refreshBarbersBtn = document.getElementById('refreshBarbers');
+        const barberForm = document.getElementById('barberForm');
+        const barberFormTitle = document.getElementById('barberFormTitle');
+        const barberId = document.getElementById('barberId');
+        const barberName = document.getElementById('barberName');
+        const barberSpecialty = document.getElementById('barberSpecialty');
+        const barberActive = document.getElementById('barberActive');
+        const resetBarberFormBtn = document.getElementById('resetBarberForm');
+        const daysOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
         // Cursor Logic
         const cursorDot = document.querySelector('.cursor-dot');
@@ -367,6 +535,26 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             }
             if (prevBtn) prevBtn.disabled = page <= 1;
             if (nextBtn) nextBtn.disabled = page >= totalPages;
+        }
+
+        function resetBarberForm() {
+            if (!barberForm) return;
+            barberForm.reset();
+            barberId.value = '';
+            barberActive.checked = true;
+            barberFormTitle.textContent = 'Add Barber';
+        }
+
+        function availabilityToText(avail) {
+            if (!avail || typeof avail !== 'object') return '';
+            const parts = [];
+            daysOfWeek.forEach(day => {
+                const slots = avail[day] || [];
+                if (slots.length) {
+                    parts.push(`${day.slice(0,3)}: ${slots.join(', ')}`);
+                }
+            });
+            return parts.join(' • ');
         }
 
         async function loadBookings() {
@@ -429,6 +617,144 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
 
             updatePager(bookingsPageInfo, bookingsPrev, bookingsNext, bookingState.page, totalPages, total);
             wireBookingActions();
+        }
+
+        async function loadBarbers() {
+            setStatus(barberStatus, 'Syncing...');
+            try {
+                const res = await fetch('admin_barbers.php');
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Failed to load barbers');
+                barberState.data = data.barbers || [];
+                renderBarbers();
+                setStatus(barberStatus, `Last synced: ${new Date().toLocaleTimeString()}`);
+            } catch (error) {
+                console.error(error);
+                barbersBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ff5c5c;">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderBarbers() {
+            if (!barbersBody) return;
+            barbersBody.innerHTML = '';
+            if (!barberState.data.length) {
+                barbersBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No barbers yet.</td></tr>';
+                return;
+            }
+            barberState.data.forEach((b) => {
+                const row = document.createElement('tr');
+                const activeBadge = b.active ? '<span class="status-badge ok">Active</span>' : '<span class="status-badge danger">Inactive</span>';
+                row.innerHTML = `
+                    <td style="font-weight:600;">${b.name}</td>
+                    <td>${b.specialty || '<span style="opacity:0.6">N/A</span>'}</td>
+                    <td>${availabilityToText(b.availability || {}) || '<span style="opacity:0.6">No schedule</span>'}</td>
+                    <td>${activeBadge}</td>
+                    <td>
+                        <div class="barber-actions">
+                            <button class="action-btn" data-barber-id="${b.id}" data-action="edit">Edit</button>
+                            <button class="action-btn" data-barber-id="${b.id}" data-action="delete">Delete</button>
+                        </div>
+                    </td>
+                `;
+                barbersBody.appendChild(row);
+            });
+
+            barbersBody.querySelectorAll('button[data-barber-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = Number(btn.dataset.barberId);
+                    const action = btn.dataset.action;
+                    if (action === 'edit') {
+                        populateBarberForm(id);
+                    } else if (action === 'delete') {
+                        deleteBarber(id);
+                    }
+                });
+            });
+        }
+
+        function populateBarberForm(id) {
+            const barber = barberState.data.find(b => Number(b.id) === Number(id));
+            if (!barber) return;
+            barberId.value = barber.id;
+            barberName.value = barber.name || '';
+            barberSpecialty.value = barber.specialty || '';
+            barberActive.checked = Number(barber.active) === 1;
+            daysOfWeek.forEach(day => {
+                const input = document.getElementById(`avail-${day.toLowerCase()}`);
+                if (input) {
+                    input.value = (barber.availability?.[day] || []).join(', ');
+                }
+            });
+            barberFormTitle.textContent = 'Edit Barber';
+        }
+
+        function availabilityPayloadFromInputs() {
+            const payload = {};
+            daysOfWeek.forEach(day => {
+                const input = document.getElementById(`avail-${day.toLowerCase()}`);
+                if (!input) return;
+                const value = input.value.trim();
+                if (!value) {
+                    payload[day] = [];
+                    return;
+                }
+                payload[day] = value.split(',').map(v => v.trim()).filter(Boolean);
+            });
+            return payload;
+        }
+
+        async function saveBarber(event) {
+            event.preventDefault();
+            const idVal = barberId.value.trim();
+            const nameVal = barberName.value.trim();
+            const specialtyVal = barberSpecialty.value.trim();
+            const activeVal = barberActive.checked ? 1 : 0;
+            if (!nameVal) {
+                alert('Name is required');
+                return;
+            }
+            const payload = {
+                id: idVal ? Number(idVal) : undefined,
+                name: nameVal,
+                specialty: specialtyVal,
+                active: activeVal,
+                availability: availabilityPayloadFromInputs(),
+            };
+            const action = idVal ? 'update' : 'create';
+            setStatus(barberStatus, `${idVal ? 'Updating' : 'Creating'} barber...`);
+            try {
+                const res = await fetch(`admin_barbers.php?action=${action}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Failed to save barber');
+                resetBarberForm();
+                await loadBarbers();
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'Error saving barber');
+            }
+        }
+
+        async function deleteBarber(id) {
+            if (!confirm('Delete this barber? This will remove their availability.')) return;
+            setStatus(barberStatus, 'Removing barber...');
+            try {
+                const res = await fetch('admin_barbers.php?action=delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }),
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Failed to delete barber');
+                resetBarberForm();
+                await loadBarbers();
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'Error deleting barber');
+            }
         }
 
         async function loadReviews() {
@@ -534,6 +860,9 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         handlePerPageChange(reviewsPerPageSelect, reviewState, renderReviews);
         wirePager(bookingsPrev, bookingsNext, bookingState, renderBookings);
         wirePager(reviewsPrev, reviewsNext, reviewState, renderReviews);
+        refreshBarbersBtn?.addEventListener('click', loadBarbers);
+        barberForm?.addEventListener('submit', saveBarber);
+        resetBarberFormBtn?.addEventListener('click', resetBarberForm);
 
         function bookingStatusBadge(status) {
             if (status === 'completed') return '<span class="status-badge ok">Completed</span>';
@@ -572,6 +901,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         
         loadBookings();
         loadReviews();
+        loadBarbers();
     </script>
 </body>
 </html>
