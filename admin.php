@@ -40,6 +40,9 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             color: var(--text-secondary);
             letter-spacing: 1px;
             margin-right: 2rem;
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
         }
 
         .dashboard-grid {
@@ -208,49 +211,6 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             font-size: 0.9rem;
         }
 
-        .barber-grid {
-            display: grid;
-            grid-template-columns: 1.1fr 1fr;
-            gap: 2rem;
-        }
-
-        .card {
-            background: #0f1012;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 1.5rem;
-        }
-
-        .card h3 {
-            margin-top: 0;
-            margin-bottom: 1rem;
-            color: #fff;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .form-row label {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            display: block;
-            margin-bottom: 0.35rem;
-        }
-
-        .form-row input[type="text"],
-        .form-row input[type="email"],
-        .form-row input[type="tel"] {
-            width: 100%;
-            padding: 0.6rem 0.75rem;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: #0b0b0f;
-            color: #fff;
-        }
-
         .pill {
             display: inline-block;
             padding: 0.3rem 0.6rem;
@@ -258,27 +218,6 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             border-radius: 999px;
             font-size: 0.8rem;
             color: #fff;
-        }
-
-        .availability-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .availability-grid label {
-            margin-bottom: 0.25rem;
-        }
-
-        .availability-grid input[type="text"] {
-            width: 100%;
-            padding: 0.5rem 0.65rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: #0b0b0f;
-            color: #fff;
-            font-size: 0.9rem;
         }
 
         .barber-actions {
@@ -293,6 +232,91 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             padding: 0.6rem 1rem;
             border-radius: 8px;
             cursor: pointer;
+        }
+
+        /* Barber modal */
+        .admin-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1400;
+        }
+
+        .admin-modal.is-open { display: flex; }
+
+        .admin-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+        }
+
+        .admin-modal__dialog {
+            position: relative;
+            background: #0f1012;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 1.6rem;
+            width: min(900px, 92vw);
+            z-index: 1;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .admin-modal h3 { margin-top: 0; color: #fff; }
+
+        .admin-modal__close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-row label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-row input[type="text"] {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #0b0b0f;
+            color: #fff;
+        }
+
+        .availability-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .availability-grid label { margin-bottom: 0.25rem; }
+
+        .availability-grid input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #0b0b0f;
+            color: #fff;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -417,66 +441,70 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 <div>
                     <span id="barberStatus" style="font-size: 0.8rem; color: #888;"></span>
                     <button id="refreshBarbers" class="refresh-btn"><i class="fa fa-sync"></i> Refresh</button>
+                    <button id="openBarberModal" class="btn-glow" style="padding:0.7rem 1.4rem; margin-left:0.6rem;">Add Barber</button>
                 </div>
             </div>
 
-            <div class="barber-grid">
-                <div class="card">
-                    <h3 id="barberFormTitle">Add Barber</h3>
-                    <form id="barberForm">
-                        <input type="hidden" id="barberId">
-                        <div class="form-row">
-                            <div>
-                                <label for="barberName">Name</label>
-                                <input type="text" id="barberName" required placeholder="Barber Name">
-                            </div>
-                            <div>
-                                <label for="barberSpecialty">Specialty</label>
-                                <input type="text" id="barberSpecialty" placeholder="Fade, Beard, etc.">
-                            </div>
-                        </div>
-                        <div style="margin-top:0.6rem;">
-                            <label style="display:flex; align-items:center; gap:0.5rem;">
-                                <input type="checkbox" id="barberActive" checked>
-                                <span style="color:#fff;">Active</span>
-                            </label>
-                        </div>
-
-                        <div class="availability-grid">
-                            <?php foreach (['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as $day): ?>
-                            <div>
-                                <label for="avail-<?php echo strtolower($day); ?>"><?php echo $day; ?></label>
-                                <input type="text" id="avail-<?php echo strtolower($day); ?>" placeholder="09:00,10:00,11:00">
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-
-                        <div style="display:flex; gap:0.6rem; margin-top:1rem;">
-                            <button type="submit" class="btn-glow" style="padding:0.8rem 1.6rem;">Save Barber</button>
-                            <button type="button" id="resetBarberForm" class="btn-ghost">Reset</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="table-container card" style="overflow: auto;">
-                    <table class="premium-table" style="min-width: 640px;">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Specialty</th>
-                                <th>Availability</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="barbersBody">
-                            <tr><td colspan="5" style="text-align:center; color: #555;">Loading barbers...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-container card" style="overflow: auto;">
+                <table class="premium-table" style="min-width: 640px;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Specialty</th>
+                            <th>Availability</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="barbersBody">
+                        <tr><td colspan="5" style="text-align:center; color: #555;">Loading barbers...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
+    </div>
+
+    <!-- Barber Modal -->
+    <div id="barber-modal" class="admin-modal" aria-hidden="true">
+        <div class="admin-modal__backdrop" data-barber-close></div>
+        <div class="admin-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="barberFormTitle">
+            <button class="admin-modal__close" type="button" data-barber-close>&times;</button>
+            <h3 id="barberFormTitle">Add Barber</h3>
+            <form id="barberForm">
+                <input type="hidden" id="barberId">
+                <div class="form-row">
+                    <div>
+                        <label for="barberName">Name</label>
+                        <input type="text" id="barberName" required placeholder="Barber Name">
+                    </div>
+                    <div>
+                        <label for="barberSpecialty">Specialty</label>
+                        <input type="text" id="barberSpecialty" placeholder="Fade, Beard, etc.">
+                    </div>
+                </div>
+                <div style="margin-top:0.6rem;">
+                    <label style="display:flex; align-items:center; gap:0.5rem;">
+                        <input type="checkbox" id="barberActive" checked>
+                        <span style="color:#fff;">Active</span>
+                    </label>
+                </div>
+
+                <div class="availability-grid">
+                    <?php foreach (['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as $day): ?>
+                    <div>
+                        <label for="avail-<?php echo strtolower($day); ?>"><?php echo $day; ?></label>
+                        <input type="text" id="avail-<?php echo strtolower($day); ?>" placeholder="09:00,10:00,11:00">
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div style="display:flex; gap:0.6rem; margin-top:1rem;">
+                    <button type="submit" class="btn-glow" style="padding:0.8rem 1.6rem;">Save Barber</button>
+                    <button type="button" id="resetBarberForm" class="btn-ghost" data-barber-close>Close</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -500,6 +528,8 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         const barberStatus = document.getElementById('barberStatus');
         const barbersBody = document.getElementById('barbersBody');
         const refreshBarbersBtn = document.getElementById('refreshBarbers');
+        const openBarberModalBtn = document.getElementById('openBarberModal');
+        const barberModal = document.getElementById('barber-modal');
         const barberForm = document.getElementById('barberForm');
         const barberFormTitle = document.getElementById('barberFormTitle');
         const barberId = document.getElementById('barberId');
@@ -543,6 +573,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
             barberId.value = '';
             barberActive.checked = true;
             barberFormTitle.textContent = 'Add Barber';
+            closeBarberModal();
         }
 
         function availabilityToText(avail) {
@@ -686,6 +717,7 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 }
             });
             barberFormTitle.textContent = 'Edit Barber';
+            openBarberModal();
         }
 
         function availabilityPayloadFromInputs() {
@@ -755,6 +787,20 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
                 console.error(error);
                 alert(error.message || 'Error deleting barber');
             }
+        }
+
+        function openBarberModal() {
+            if (!barberModal) return;
+            barberModal.classList.add('is-open');
+            barberModal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeBarberModal() {
+            if (!barberModal) return;
+            barberModal.classList.remove('is-open');
+            barberModal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
         }
 
         async function loadReviews() {
@@ -863,6 +909,13 @@ $adminName = $_SESSION['admin_username'] ?? 'Admin';
         refreshBarbersBtn?.addEventListener('click', loadBarbers);
         barberForm?.addEventListener('submit', saveBarber);
         resetBarberFormBtn?.addEventListener('click', resetBarberForm);
+        openBarberModalBtn?.addEventListener('click', () => {
+            resetBarberForm();
+            openBarberModal();
+        });
+        barberModal?.querySelectorAll('[data-barber-close]').forEach(el => {
+            el.addEventListener('click', closeBarberModal);
+        });
 
         function bookingStatusBadge(status) {
             if (status === 'completed') return '<span class="status-badge ok">Completed</span>';
