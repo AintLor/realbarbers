@@ -4,6 +4,7 @@ declare(strict_types=1);
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/auth.php';
 
 function ensure_schema(mysqli $connection): void
 {
@@ -79,6 +80,11 @@ try {
 
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? '';
+
+    $isAdminAction = ($method === 'POST' && $action === 'setVisibility') || ($method === 'GET' && $action === 'adminReviews');
+    if ($isAdminAction) {
+        require_admin_auth();
+    }
 
     if ($method === 'POST' && $action === 'setVisibility') {
         $payload = json_decode(file_get_contents('php://input'), true);
