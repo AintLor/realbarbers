@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
 ensure_session();
+enforce_basic_auth(false, false);
 
 $error = '';
 $now = time();
-$maxAttempts = 5;
-$windowSeconds = 120; // 2 minutes
-$lockSeconds = 120;   // 2 minutes
+$maxAttempts = ADMIN_RATE_MAX_ATTEMPTS;
+$windowSeconds = ADMIN_RATE_WINDOW_SECONDS;
+$lockSeconds = ADMIN_RATE_WINDOW_SECONDS;
 
 // Initialize attempt tracking
 if (!isset($_SESSION['admin_login_attempts'])) {
@@ -36,6 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         goto render;
     }
 
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    try {
+        rate_limit_attempt('admin-form:' . $clientIp, ADMIN_RATE_MAX_ATTEMPTS, ADMIN_RATE_WINDOW_SECONDS);
+    } catch (RateLimitException $ex) {
+        $error = $ex->getMessage();
+        goto render;
+    }
+
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
@@ -45,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($envUser === null || $envPass === null) {
         $error = 'ADMIN_USERNAME and ADMIN_PASSWORD must be set on the server.';
     } elseif ($username === $envUser && hash_equals($envPass, $password)) {
+        reset_rate_limit('admin-form:' . $clientIp);
         $_SESSION['admin_authenticated'] = true;
         $_SESSION['admin_username'] = $username;
         $_SESSION['admin_login_attempts'] = [];
